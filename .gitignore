@@ -1,0 +1,23 @@
+# 开发用辅助文件
+.agents/
+PRODUCT.md
+
+# 运行时生成的产物（不应提交）
+courses/
+qa/
+to-learn/
+
+# Obsidian 笔记输出（如果生成在仓库内）
+*.HMR.md
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 临时文件
+*.tmp
+*.log
