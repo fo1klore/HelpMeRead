@@ -63,7 +63,8 @@ On first use, you'll be prompted for the vault path. It's then persisted to `~/.
   "obsidian_vault": "D:\\Path\\To\\Vault",
   "theme": "light",
   "self_check": false,
-  "qa_record": false
+  "qa_record": false,
+  "to_learn": true
 }
 ```
 
@@ -107,6 +108,7 @@ HelpMeRead/
 
 | Date | Change |
 |---|---|
+| 2026-06-22 | **v1.2** · Unified bottom nav, citation superscripts + reference lists, CSS fix for floating TOC, to-learn setting in onboarding |
 | 2026-06-21 | **v1.1** · First-run onboarding, external CSS + parallel generation, flip-card fix, close-reading depth upgrade |
 | 2026-06-21 | Initial release |
 

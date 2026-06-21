@@ -66,10 +66,13 @@
   <div class="bottom-nav reveal">
     {{#if 上一节文件}}
     <a href="{{上一节文件}}" class="prev-link" style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:16px">←</span> {{上一节标签}}
+      <div class="arr">←</div>
+      <div><div class="nl">{{上一节标签}}</div><div class="nt">{{上一节标题}}</div></div>
     </a>
     {{else}}
-    <span class="prev-link">← 上一节</span>
+    <span class="prev-link" style="opacity:0.3;pointer-events:none">
+      <div class="arr">←</div>
+    </span>
     {{/if}}
 
     {{#if 下一节文件}}

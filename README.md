@@ -64,7 +64,8 @@
   "obsidian_vault": "D:\\Path\\To\\Vault",
   "theme": "light",
   "self_check": false,
-  "qa_record": false
+  "qa_record": false,
+  "to_learn": true
 }
 ```
 
@@ -107,6 +108,7 @@ HelpMeRead/
 
 | 日期 | 变更 |
 |---|---|
+| 2026-06-22 | **v1.2** · 底部导航统一、引用角标支持、CSS 修复悬浮 TOC、首次引导新增待学习设置 |
 | 2026-06-21 | **v1.1** · 首次运行引导、CSS外置+并行生成、翻转卡修复、精读级别内容升级 |
 | 2026-06-21 | 初始发布 |
 
