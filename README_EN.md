@@ -26,7 +26,7 @@ Reading papers has two pain points: you forget what you read (didn't truly learn
 - Every point is annotated with its source location **[page / section]**, fully traceable
 - Key formulas are reproduced with symbol-by-symbol explanations
 - Terms are automatically tagged as candidate atomic notes; after learning, you're guided to split them yourself (hands-on splitting is how knowledge internalizes)
-- **To-learn mechanism**: encounter a concept the paper didn't explain? Save it to the to-learn directory and get help finding relevant resources
+- **To-learn mechanism**: when a concept isn't explained in the paper, the agent gives a one-sentence explanation and auto-saves it to the to-learn directory — no extra confirmation needed. It can then help find related resources
 - **Self-check module** (off by default): Q&A-style questions appended to your notes; answer them and get a strict review
 
 ### 💬 Q&A — Precise, source-backed answers
@@ -52,6 +52,8 @@ You can also use sub-commands to run only part of the flow — say "summarize on
 
 If you only have a paper title (no URL or PDF), the agent will search the web and confirm with you before proceeding.
 
+On first use, the agent will guide you through initial setup (vault path, course theme, self-check module, Q&A record preference), then remember your choices.
+
 ### 📂 Obsidian vault path
 
 On first use, you'll be prompted for the vault path. It's then persisted to `~/.help-me-read.json` for future sessions. You can also edit this file directly to change it:
@@ -59,7 +61,9 @@ On first use, you'll be prompted for the vault path. It's then persisted to `~/.
 ```json
 {
   "obsidian_vault": "D:\\Path\\To\\Vault",
-  "theme": "light"
+  "theme": "light",
+  "self_check": false,
+  "qa_record": false
 }
 ```
 
@@ -103,6 +107,7 @@ HelpMeRead/
 
 | Date | Change |
 |---|---|
+| 2026-06-21 | **v1.1** · First-run onboarding, external CSS + parallel generation, flip-card fix, close-reading depth upgrade |
 | 2026-06-21 | Initial release |
 
 ## 📄 License
