@@ -5,6 +5,8 @@
 Turn academic papers into **learnable courses** and a **searchable knowledge base**. An agent skill; output in Markdown files (using Obsidian-compatible syntax: callouts, wikilinks, MathJax), stored in your vault, interoperable with your other notes.
 
 > 💡 **Requires [Obsidian](https://obsidian.md/) ≥ 1.x** (uses callouts, Bases, MathJax, wikilinks). Non-Obsidian editors can read the Markdown content, but callout folding and `[[wikilinks]]` degrade to plain text/blockquotes.
+>
+> 💡 **Recommended Companion**: Install the [Claudian plugin](https://github.com/YishenTu/claudian) ([中文安装教程](https://developer.aliyun.com/article/1712715)) from the Obsidian community plugins marketplace, and import the Help Me Read skill into its built-in agent. This lets you complete the entire "Generate Course → Learn → Decompose Notes" workflow **within a single Obsidian window** — no more switching between terminal and Obsidian.
 
 ## ✨ Features
 
@@ -133,8 +135,9 @@ HelpMeRead/
 
 | Date | Changes | 💭 Dev Notes |
 |---|---|---|
+| 2026-06-22 | **v2.1** · Full course generation; image extraction optimization; new Concepts blocks; improved note decomposition guidance (evaluate → back-check → supplement → fix); Obsidian URI file opening; course map | Oi! Shipping without testing again, huh?! |
 | 2026-06-22 | **v2.0** · Full Markdown migration (removed HTML/flip-cards/self-check); enriched frontmatter + scaffolded decomposition + to-learn graduation; course figures + external resources + arxiv links; verified traceability (page check + citation back-check); cross-paper connections + progress persistence; minimal first-run prompt; ambiguous-word routing; cross-platform PyMuPDF | Reborn. Last life, I was betrayed — tokens burned to ash. This time, I'm taking it all back. Enlightenment hit: when tokens are on the line, looks mean *nothing*. The Seven nodded. Tokens said no. Tokens, watch closely — this cut will be clean. Tokens, go home. Tokens, max level. Tokens, I kept the promise. MAKE WAY FOR TOKENS!! *(inner monologue: wait, they can READ this??)* |
-| 2026-06-22 | v1.2 — unified bottom nav + citation superscripts + CSS TOC fix + to-learn setup | You shipped this without testing?! *(inner monologue: there was no testing)* |
+| 2026-06-22 | v1.2 — unified bottom nav + citation superscripts + CSS TOC fix + to-learn setup | You shipped this without testing?! *(inner monologue: there was no testing, at all.)* |
 | 2026-06-21 | v1.1 — first-run onboarding + external CSS + flip-card fix + deep-reading upgrade | Just make it *good*, man!! |
 | 2026-06-21 | Initial release | When it's time to read papers, suddenly *everything* else is fascinating XD |
 

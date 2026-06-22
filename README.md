@@ -5,6 +5,8 @@
 把学术论文变成**可学习的课程**和**可检索的知识库**。一个 agent skill，产物以 Markdown 文件（使用 Obsidian 兼容语法：callout、wikilink、MathJax）存入你的 vault，与你的其他笔记互通。
 
 > 💡 **依赖 [Obsidian](https://obsidian.md/) ≥ 1.x**（使用 callout、Bases、MathJax、双链）。非 Obsidian 编辑器能读取 Markdown 内容，但 callout 折叠和 `[[双链]]` 会降级为普通文本/引用块。
+>
+> 💡 **推荐搭配**：在 Obsidian 社区插件中安装 [Claudian 插件](https://github.com/YishenTu/claudian)（[中文安装教程](https://developer.aliyun.com/article/1712715)），将 Help Me Read skill 导入内置 agent。这样你可以在 **Obsidian 单一窗口内**完成「生成课程 → 学习 → 拆解笔记」全流程，无需在终端和 Obsidian 之间来回切换。
 
 ## ✨ 功能
 
@@ -66,7 +68,7 @@
 **首次使用时只问 vault 路径**，其余配置用合理默认值，让你尽快看到第一份产物。此后自动记住。
 
 ---
-
+	
 ## ⚙️ 配置（~/.help-me-read.json）
 
 | 项 | 默认 | 说明 |
@@ -134,6 +136,7 @@ HelpMeRead/
 
 | 日期 | 变更 | 📝 开发者寄语 |
 |---|---|---|
+| 2026-06-22 | **v2.1** · 课程全量生成；图片提取优化；新增Concepts 区块；优化笔记拆解引导（评价→反查→增补→修正）；改为 Obsidian URI 打开文件；添加课程地图 | Oi！又不测试就端上来是吧！ |
 | 2026-06-22 | **v2.0** · 全面 Markdown 化（砍 HTML/翻转卡/自测）；笔记 frontmatter 加厚 + 脚手架拆分 + 待学毕业；课程原图 + 延伸资源 + arxiv 跳转；带验证标签的溯源（页码校验+引用回查）；跨论文联系 + 进度持久化；只问 vault 首次引导；歧义词路由确认；跨平台 PyMuPDF | 我重生了，上一世我被奸人陷害，token狂烧，这一世，我要拿回属于我的一切！我悟了，在token面前，长得怎么样一点都不重要。七神默许，token反对。token看好了，这一刀会很帅。token，老实回家做宅男。token，100级，海神！token，三年之约我如约而至。token驾到，通通闪开！！os：他们居然能看到我的os？？ |
 | 2026-06-22 | v1.2 — 底部导航统一 + 引用角标 + CSS 修复 TOC + 待学习初始设置 | 没测试够你端上来干嘛！！os：其实根本没测试 |
 | 2026-06-21 | v1.1 — 首次运行引导 + CSS 外置并行生成 + 翻转卡修复 + 精读升级 | 做东西给我做好的呀！！ |
