@@ -2,14 +2,6 @@
 .agents/
 PRODUCT.md
 
-# 运行时生成的产物（不应提交）
-courses/
-qa/
-to-learn/
-
-# Obsidian 笔记输出（如果生成在仓库内）
-*.HMR.md
-
 # 系统/编辑器
 .DS_Store
 Thumbs.db
@@ -18,8 +10,12 @@ Thumbs.db
 *.swp
 *.swo
 
+# Obsidian 自动生成的配置缓存
+.obsidian/
+
 # 临时文件
 *.tmp
 *.log
-test/
+
+# 历史辅助脚本
 gen_courses.py

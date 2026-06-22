@@ -2,115 +2,141 @@
 
 > [中文版](README.md)
 
-Turn academic papers into **interactive courses** and a **searchable knowledge base**.
+Turn academic papers into **learnable courses** and a **searchable knowledge base**. An agent skill; output in Markdown files (using Obsidian-compatible syntax: callouts, wikilinks, MathJax), stored in your vault, interoperable with your other notes.
 
-Reading papers has two pain points: you forget what you read (didn't truly learn it), and nothing sticks (doesn't become your own knowledge). Help Me Read tackles both — it first builds a step-by-step HTML course to help you truly understand the paper, then produces structured notes with term-based atomic notes, a to-learn list, and source-traceable Q&A, so the paper genuinely enters your knowledge network.
-
-> 💡 **Best paired with [Obsidian](https://obsidian.md/)** for the full knowledge-base experience (structured notes, atomic notes, bidirectional links). Without Obsidian, the course feature works standalone and still helps you learn the paper.
+> 💡 **Requires [Obsidian](https://obsidian.md/) ≥ 1.x** (uses callouts, Bases, MathJax, wikilinks). Non-Obsidian editors can read the Markdown content, but callout folding and `[[wikilinks]]` degrade to plain text/blockquotes.
 
 ## ✨ Features
 
-### 🎓 Course — Turn papers into learnable lessons
+### 🎓 Courses — papers broken into progressive lessons
 
-- Reorganizes the paper by **learning path** into several sequential lessons, each focusing on 1–2 core concepts
-- Beginner-friendly, with each lesson labeled with **skip conditions** — skip ahead if you already know it
-- Each lesson includes: learning objectives, core explanations (with everyday analogies), optional code implementations (only when trusted source code exists), self-check questions (with answers), and a lesson summary
-- Courses are delivered as standalone HTML files — open in any browser, no special software required
+- Reorganized by **learning path**, each lesson focuses on 1-2 core concepts with everyday analogies
+- Flexible lesson count (1-7+), with on-demand "redo section N" / "deep dive section N"
+- Each lesson includes: objectives, core explanation (analogy + formulas + **paper figures**), optional code implementation, self-check questions (answers collapsed), curated external resources
+- All courses in Markdown with Obsidian-compatible syntax (callouts, wikilinks, MathJax), sharing wikilinks and formula rendering with your notes
 
-### 📝 Notes — Write into a structured knowledge base
+### 📝 Notes — structured knowledge base
 
-- Automatically selects the right summary structure based on paper type:
-  - **Research papers** → Background & Motivation / Problem Definition / Method (with formulas) / Experiments / Conclusions & Limitations / Related Work
-  - **Surveys** → Domain Overview / Classification System / Method Comparison / Trends / Open Problems
-  - **Dataset papers** → Construction Motivation / Data Composition / Annotation Pipeline / Statistics / Benchmarks / Limitations & Ethics
-- Every point is annotated with its source location **[page / section]**, fully traceable
-- Key formulas are reproduced with symbol-by-symbol explanations
-- Terms are automatically tagged as candidate atomic notes; after learning, you're guided to split them yourself (hands-on splitting is how knowledge internalizes)
-- **To-learn mechanism**: when a concept isn't explained in the paper, the agent gives a one-sentence explanation and auto-saves it to the to-learn directory — no extra confirmation needed. It can then help find related resources
-- **Self-check module** (off by default): Q&A-style questions appended to your notes; answer them and get a strict review
+- Auto-selects template by paper type (research / survey / dataset), with full frontmatter
+- Every claim tagged with **【page / section】** source, verified through **page-range check + citation back-check**
+- Formulas rendered with MathJax and symbols explained
+- Terms tagged as `[[candidate atomic notes]]`
+- **Learning supplement layer**: appended after course completion, **physically separated** from the verified original-paper layer
+- **To-learn mechanism**: unexplained concepts get a one-liner explanation and auto-saved to `to-learn/`, with optional resource search. Supports "graduation" to formal atomic notes once understood
+- **Cross-paper connections**: proactively suggests links to previously read papers
 
-### 💬 Q&A — Precise, source-backed answers
+### 📝 Atomic Notes — low-friction decomposition
 
-- Aim for concise, to-the-point answers — answer exactly what was asked, nothing more
-- Quote the original text first whenever possible, then add minimal necessary explanation
-- Every statement is labeled with its source type
-- Questions outside the paper's scope are honestly flagged as "not covered by the paper" — never fabricate
+- Agent pre-builds scaffolding files (frontmatter / provenance / related links filled), **you only write "what this thing is in your own words"**
+- Chat-guided one-by-one, with visible progress
+- Cross-paper dedup: same term across papers appends provenance, no duplicate files
+- True knowledge internalization — think, don't file-manage
+
+### 💬 Q&A — verified, precise answers
+
+- Concise: quote the paper first, supplement only if needed
+- **Five-tier source tags**: `[原文·Verified]` / `[原文·Unverified]` / `[Inferred]` / `[Background]` / `[Unknown]`
+- Every answer cites sources; out-of-scope questions honestly flagged
+- Optional QA record saving
+
+### ⏱️ Progress Persistence
+
+- Course progress and last section written to frontmatter; resume from where you left off
+
+---
 
 ## 🚀 Usage
 
-Trigger via the `/help-me-read` command or plain natural language:
+Trigger with `/help-me-read` or natural language:
 
 ```
 /help-me-read https://arxiv.org/abs/1706.03762
-Help me read this paper: Attention Is All You Need
-Summarize this PDF: D:\papers\transformer.pdf
+Help me read this PDF: D:\papers\transformer.pdf
+Summarize Attention Is All You Need
 Turn this into a course, I'm a beginner
-What does this survey say?
+Redo section 2
+Deep dive section 3
 ```
 
-You can also use sub-commands to run only part of the flow — say "summarize only" for notes alone, "make a course" for the course alone, or ask a question directly to enter Q&A mode.
+Sub-commands: "just summarize" for notes only, "make a course" for course only, "redo section N" to regenerate one lesson. Direct questions enter Q&A.
 
-If you only have a paper title (no URL or PDF), the agent will search the web and confirm with you before proceeding.
+Title-only input → agent searches and confirms with you before proceeding.
 
-On first use, the agent will guide you through initial setup (vault path, course theme, self-check module, Q&A record preference), then remember your choices.
+**First run only asks for vault path** — everything else uses sensible defaults, so you see output fast. Persisted thereafter.
 
-### 📂 Obsidian vault path
+---
 
-On first use, you'll be prompted for the vault path. It's then persisted to `~/.help-me-read.json` for future sessions. You can also edit this file directly to change it:
+## ⚙️ Configuration (~/.help-me-read.json)
 
-```json
-{
-  "obsidian_vault": "D:\\Path\\To\\Vault",
-  "theme": "light",
-  "self_check": false,
-  "qa_record": false,
-  "to_learn": true
-}
-```
-
-## ⚙️ Configuration
-
-| Item | Default | Description |
+| Item | Default | Notes |
 |---|---|---|
-| Obsidian vault path | Ask once | Persisted to `~/.help-me-read.json` after first input |
-| Self-check module | Off | When on, Q&A questions are appended to notes for a strict review — correct answers pass, incorrect ones get feedback to retry, direct answers are only given on explicit request |
-| Q&A record saving | Off | After each Q&A round, you'll be asked whether to save the record as a standalone note |
-| Lesson count | 3–5 | Automatically determined by paper length; hard cap at 5 |
-| Code implementation | Auto | When the paper involves algorithms/models with trusted source code, corresponding code snippets with line-by-line annotations are appended |
-| Course theme | Light | Default light. Say "use dark" to switch. Preference persisted to `~/.help-me-read.json` |
+| Obsidian vault path | Asked (first run) | All output stored in vault's `HelpMeRead/` subdirectory |
+| QA record saving | Off | Asked after each QA session |
+| To-learn | On | Unexplained concepts auto-saved to to-learn |
+
+---
 
 ## 📊 Supported Paper Types
 
-| Type | Summary Structure | Course Shape |
+| Type | Note Structure | Course Form |
 |---|---|---|
-| Research paper | Academic standard structure | Learning-path reorganization |
-| Survey | Domain map structure | Overview + school-by-school walkthrough |
-| Dataset paper | Data lifecycle structure | Lifecycle-stage walkthrough |
-| Others (case study, tech report, position paper, etc.) | Fall back to research template, flexibly adjust section titles | Learning-path reorganization |
+| Research paper | Standard academic structure | Learning-path reorganized |
+| Survey | Domain-map structure | Panorama + school-by-school (6-8 lessons) |
+| Dataset paper | Data-lifecycle structure | Lifecycle lessons |
+| Other | Flexible | Learning-path reorganized |
 
-## 📁 Directory Structure
+---
+
+## 📁 Output Structure (inside your Obsidian vault)
+
+```
+<Vault>/HelpMeRead/
+├── papers/                                      # One directory per paper
+│   └── attention-is-all-you-need/
+│       ├── HMR-attention-is-all-you-need.md       # Main paper note
+│       ├── course/                              # Course (Markdown)
+│       │   ├── 01-why-attention.md
+│       │   ├── 02-self-attention.md
+│       │   ├── 03-multi-head-and-position.md
+│       │   ├── 04-results-and-impact.md
+│       │   └── assets/                          # Paper figures
+│       │       └── figure-1.png
+│       └── qa-2026-06-22.md                     # QA record
+├── concepts/                                    # Cross-paper atomic notes
+│   ├── self-attention.md
+│   └── multi-head-attention.md
+├── to-learn/                                    # To-learn list (with lifecycle)
+│   └── positional-encoding.md
+└── HelpMeRead MOC.md                            # Index (Bases views)
+```
+
+> All output in one `HelpMeRead/` directory — removable as a whole, never mixed with your personal notes.
+
+## 📋 Repository Structure
 
 ```
 HelpMeRead/
-├── SKILL.md                          # Core: triggers, type routing, full workflow
+├── SKILL.md                                     # Skill core: triggers, orchestration, full flow
 ├── references/
-│   ├── obsidian-note-template.md     # Three note templates + atomic notes + self-check + to-learn
-│   ├── course-design-guide.md        # Three course design guides + code module spec
-│   ├── course-template.html          # Light theme HTML template
-│   ├── course-template-dark.html     # Dark theme HTML template
-│   └── qa-standards.md               # Q&A standards (four source labels + mandatory citation)
+│   ├── obsidian-note-template.md                # Five note templates (scaffolding, to-learn, supplement)
+│   ├── course-design-guide.md                   # Three course design guides (figures, resources)
+│   ├── qa-standards.md                          # Q&A standards (five-tier tags + back-check)
+│   └── frontmatter-schema.md                    # Full field frontmatter schema + MOC
+├── examples/                                    # Complete samples (Transformer paper)
 ├── README.md
 ├── README_EN.md
+├── LICENSE
 └── .gitignore
 ```
 
 ## 📋 Changelog
 
-| Date | Change |
-|---|---|
-| 2026-06-22 | **v1.2** · Unified bottom nav, citation superscripts + reference lists, CSS fix for floating TOC, to-learn setting in onboarding |
-| 2026-06-21 | **v1.1** · First-run onboarding, external CSS + parallel generation, flip-card fix, close-reading depth upgrade |
-| 2026-06-21 | Initial release |
+| Date | Changes | 💭 Dev Notes |
+|---|---|---|
+| 2026-06-22 | **v2.0** · Full Markdown migration (removed HTML/flip-cards/self-check); enriched frontmatter + scaffolded decomposition + to-learn graduation; course figures + external resources + arxiv links; verified traceability (page check + citation back-check); cross-paper connections + progress persistence; minimal first-run prompt; ambiguous-word routing; cross-platform PyMuPDF | Reborn. Last life, I was betrayed — tokens burned to ash. This time, I'm taking it all back. Enlightenment hit: when tokens are on the line, looks mean *nothing*. The Seven nodded. Tokens said no. Tokens, watch closely — this cut will be clean. Tokens, go home. Tokens, max level. Tokens, I kept the promise. MAKE WAY FOR TOKENS!! *(inner monologue: wait, they can READ this??)* |
+| 2026-06-22 | v1.2 — unified bottom nav + citation superscripts + CSS TOC fix + to-learn setup | You shipped this without testing?! *(inner monologue: there was no testing)* |
+| 2026-06-21 | v1.1 — first-run onboarding + external CSS + flip-card fix + deep-reading upgrade | Just make it *good*, man!! |
+| 2026-06-21 | Initial release | When it's time to read papers, suddenly *everything* else is fascinating XD |
 
 ## 📄 License
 
