@@ -19,3 +19,6 @@ Thumbs.db
 
 # 历史辅助脚本
 gen_courses.py
+
+# 项目问题追踪（本地）
+ISSUES.md
