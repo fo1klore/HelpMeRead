@@ -20,8 +20,6 @@ source: "https://arxiv.org/abs/1706.03762"
 pdf: ""
 status: learning
 read_date: 2026-06-22
-progress: 4
-last_section: "04-results-and-impact"
 sections: 4
 tags:
   - paper/transformer

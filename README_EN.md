@@ -41,9 +41,9 @@ Turn academic papers into **learnable courses** and a **searchable knowledge bas
 - Every answer cites sources; out-of-scope questions honestly flagged
 - Optional QA record saving
 
-### ⏱️ Progress Persistence
+### ⏱️ Status Tracking
 
-- Course progress and last section written to frontmatter; resume from where you left off
+- Course completion status written to frontmatter (`unread` → `learning` → `learned` → `atomized`)
 
 ---
 
@@ -135,6 +135,7 @@ HelpMeRead/
 
 | Date | Changes | 💭 Dev Notes |
 |---|---|---|
+| 2026-06-23 | **v2.3** · 8-issue batch fix: silent step 0 config check + external concept dirs onboarding; removed progress/last_section, status only; paper slug collision detection & disambiguation; PDF image pipeline overhaul (pdfimages priority, vector fallback, size bounds filtering); notes embed key figures; bottom nav mandatory in courses; external dir dedup scan | Images, please behave yourselves. |
 | 2026-06-23 | **v2.2** · Main flow 7→5 steps, steps 5&6 downgraded to cross-cutting modules; all "term" → "core concept"; SUMMARY/external resources callouts now expanded by default; PDF images: banned full-page rasterization + size filtering; final lesson decomposition reminder | How else am I supposed to test it? XD |
 | 2026-06-22 | **v2.1** · Full course generation; image extraction optimization; new Concepts blocks; improved note decomposition guidance (evaluate → back-check → supplement → fix); Obsidian URI file opening; course map | Oi! Shipping without testing again, huh?! |
 | 2026-06-22 | **v2.0** · Full Markdown migration (removed HTML/flip-cards/self-check); enriched frontmatter + scaffolded decomposition + to-learn graduation; course figures + external resources + arxiv links; verified traceability (page check + citation back-check); cross-paper connections + progress persistence; minimal first-run prompt; ambiguous-word routing; cross-platform PyMuPDF | Reborn. Last life, I was betrayed — tokens burned to ash. This time, I'm taking it all back. Enlightenment hit: when tokens are on the line, looks mean *nothing*. The Seven nodded. Tokens said no. Tokens, watch closely — this cut will be clean. Tokens, go home. Tokens, max level. Tokens, I kept the promise. MAKE WAY FOR TOKENS!! *(inner monologue: wait, they can READ this??)* |

@@ -10,9 +10,9 @@ tags:
 
 ## 按状态
 
-| 论文 | 类型 | 状态 | 已学 | 领域 |
+| 论文 | 类型 | 状态 | 领域 |
 |---|---|---|---|---|
-| [[HMR-attention-is-all-you-need]] | research | learning | 4/4 | attention |
+| [[HMR-attention-is-all-you-need]] | research | learning | attention |
 
 ## 按领域
 

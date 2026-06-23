@@ -40,8 +40,6 @@ source: "<原文 URL 或本地路径>"
 pdf: "[[<PDF文件名>.pdf]]"
 status: learning
 read_date: <YYYY-MM-DD>
-progress: 0
-last_section: ""
 sections: <课程总节数>
 tags:
   - paper/<关键词>
@@ -65,6 +63,8 @@ related: []
 
 ## 3. 方法（含公式）
 - 核心思路：<说明>【第 N 页 / Sec.3.1】
+  ![[assets/figure-N.png]]
+  *Figure N: <图题>*【第 N 页】
 - 关键公式：
   $$ <MathJax 公式> $$
   - 符号说明：$x$ 表示...，$\theta$ 表示...
@@ -74,6 +74,8 @@ related: []
 - 数据集：<说明>【第 N 页 / Sec.4】
 - 基线方法：<说明>【第 N 页 / Sec.4】
 - 关键结果：<说明>【第 N 页 / 表X】
+  ![[assets/figure-N.png]]
+  *Figure N: <图题>*【第 N 页】
 
 ## 5. 结论与局限
 - 主要贡献：<说明>【第 N 页 / Sec.5】
@@ -99,7 +101,7 @@ related: []
 ```markdown
 ---
 title, aliases, authors, year, venue, area, type: survey, source, pdf
-status: learning, read_date, progress: 0, last_section: "", sections, tags
+status: learning, read_date, sections, tags
 up, related
 ---
 
@@ -140,7 +142,7 @@ up, related
 ```markdown
 ---
 title, aliases, authors, year, venue, area, type: dataset, source, pdf
-status: learning, read_date, progress: 0, last_section: "", sections, tags
+status: learning, read_date, sections, tags
 up, related
 ---
 
@@ -182,6 +184,8 @@ up, related
 ---
 
 > **核心概念范围通用规则**：三种类型的 `🔗 核心概念` 均只标注本篇文献**引入或重点解释**的概念。直接引用但未在本文中展开解释的已有概念不收入。
+
+> **图片嵌入规则**：笔记的方法和实验章节中嵌入关键架构图/流程图/结果图（与课程共用 `papers/<简称>/course/assets/`，不额外提取）。每张图下方紧跟 `*Figure N: <图题>*【第 N 页】` 一行说明。只嵌入核心的 1-3 张——不是把所有图都塞进笔记。
 
 ---
 
