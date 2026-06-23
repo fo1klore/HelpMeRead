@@ -76,7 +76,7 @@ related: []
 - 可学习位置嵌入：Gehring 等人 2017【第 6 页 / Sec.3.5】
 - 自注意力前期探索：Lin 等人 2017（intra-sentence attention）【第 2 页】
 
-## 🔗 术语
+## 🔗 核心概念
 - [[self-attention]]、[[multi-head-attention]]、[[positional-encoding]]、[[scaled-dot-product-attention]]、[[residual-connection]]、[[layer-normalization]]、[[encoder-decoder]]
 
 ## 📝 学习补充

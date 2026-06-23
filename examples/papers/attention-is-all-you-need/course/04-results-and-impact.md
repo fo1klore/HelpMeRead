@@ -77,13 +77,16 @@ WMT 2014 英德翻译和英法翻译，训练数据分别为 4.5M 和 36M 句对
 
 ---
 
-> [!summary]- SUMMARY —— 默认折叠，点开看要点
+> [!summary]+ SUMMARY —— 默认展开，核心收获一目了然
 > - 机器翻译：28.4 BLEU（英德）、41.0（英法），全面超越 RNN/CNN。训练更快（12h vs 数天），成本更低
 > - 消融：8 头 > 单头（+0.9 BLEU），Dropout 关键（+1.2），Key 维度不能太小，正弦 ≈ 可学习 PE
 > - 句法解析 92.7 F1（半监督）证明 Transformer 是通用序列架构，非翻译专用
 > - 2017-2025：15 万+ 引用。催生了 BERT、GPT 系列、Vision Transformer、Stable Diffusion 等
->
-> **🎉 恭喜完成全部 4 节！** 你现在已经理解了 Transformer 的核心动机、自注意力的数学原理、多头与位置编码的设计、以及这篇论文为什么改变了 AI 的历史。
+
+---
+
+> [!tip]+ 🎓 下一步：拆解原子笔记
+> 你已完成全部 4 节课程！接下来我会引导你把笔记里的**核心概念**（self-attention、multi-head-attention、positional-encoding 等）逐个拆解成独立的原子笔记，用自己的话写出定义、加深理解。准备好后告诉我即可开始。
 
 ---
 

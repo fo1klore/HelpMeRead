@@ -75,7 +75,7 @@ $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)
 
 ---
 
-> [!summary]- SUMMARY —— 默认折叠，点开看要点
+> [!summary]+ SUMMARY —— 默认展开，核心收获一目了然
 > - 核心公式：$\text{Attention}(Q,K,V) = \text{softmax}(QK^T / \sqrt{d_k}) V$
 > - $Q$ 提问、$K$ 打标签、$V$ 带内容——三个角色由同一输入经不同线性投影产生
 > - $\sqrt{d_k}$ 缩放防止梯度消失，Softmax 将分数转为概率权重
