@@ -126,7 +126,9 @@ HelpMeRead/
 │   ├── obsidian-note-template.md                # Five note templates
 │   ├── course-design-guide.md                   # Three course design guides
 │   ├── qa-standards.md                          # Q&A standards
-│   └── frontmatter-schema.md                    # Full field frontmatter schema + MOC
+│   ├── frontmatter-schema.md                    # Full field frontmatter schema + MOC
+│   ├── failure-modes.md                         # Known failure modes & diagnostic guide
+│   └── issue-resolution-workflow.md             # Standard issue resolution workflow
 ├── examples/                                    # Complete samples
 ├── README.md
 ├── README_EN.md
@@ -138,6 +140,7 @@ HelpMeRead/
 
 | Date | Changes | 💭 Dev Notes |
 |---|---|---|
+| 2026-06-26 | **v2.5** · 6-issue batch fix + workflow standardization: truncation check (3-condition), to-learn trigger expansion, temp file cleanup, examples isolation, concept "Related" format, test mode detection; new issue resolution SOP + 5 failure modes | I *actually* used it this time! |
 | 2026-06-25 | **v2.4** · Self-test constraint; atomic note workflow overhaul (step 2 filtering + scaffolding, step 5 → definition guidance); embedded concept examples (auto-triggered by condition); modular test framework (TESTING.md + test/); directory cleanup |  "WHAT?! He added TESTS!?" |
 | 2026-06-23 | **v2.3** · 8-issue batch fix: silent step 0 config check + external concept dirs onboarding; removed progress/last_section, status only; paper slug collision detection & disambiguation; PDF image pipeline overhaul (pdfimages priority, vector fallback, size bounds filtering); notes embed key figures; bottom nav mandatory in courses; external dir dedup scan | Images, please behave yourselves. |
 | 2026-06-23 | **v2.2** · Main flow 7→5 steps, steps 5&6 downgraded to cross-cutting modules; all "term" → "core concept"; SUMMARY/external resources callouts now expanded by default; PDF images: banned full-page rasterization + size filtering; final lesson decomposition reminder | How else am I supposed to test it? XD |

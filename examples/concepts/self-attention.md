@@ -26,4 +26,6 @@ tags:
 - [[HMR-attention-is-all-you-need]] 第 4 页 Sec.3.2.1
 
 ## 相关
-- [[multi-head-attention]]、[[scaled-dot-product-attention]]、[[positional-encoding]]
+- [[multi-head-attention]]——Self-attention 的多头扩展，将 Q/K/V 投影到多个子空间并行计算
+- [[scaled-dot-product-attention]]——Self-attention 的核心运算，点积 + 缩放 + softmax
+- [[positional-encoding]]——为 self-attention 补充序列位置信息，使其能区分 token 顺序

@@ -1,0 +1,2 @@
+# 测试目录不包含在 GitHub ZIP/Release 归档中
+test/ export-ignore

@@ -126,7 +126,9 @@ HelpMeRead/
 │   ├── obsidian-note-template.md                # 五类笔记模板
 │   ├── course-design-guide.md                   # 三类课程设计指南
 │   ├── qa-standards.md                          # 问答标准
-│   └── frontmatter-schema.md                    # 全字段 frontmatter schema + MOC
+│   ├── frontmatter-schema.md                    # 全字段 frontmatter schema + MOC
+│   ├── failure-modes.md                         # 已知失败模式与排查指南
+│   └── issue-resolution-workflow.md             # 问题解决标准操作流程
 ├── examples/                                    # 完整样例
 ├── README.md
 ├── README_EN.md
@@ -138,6 +140,7 @@ HelpMeRead/
 
 | 日期 | 变更 | 📝 开发者寄语 |
 |---|---|---|
+| 2026-06-26 | **v2.5** · 6 项问题集中修复 + 流程标准化：截断检测（三条件判据）、待学习触发扩展、临时文件清理、examples 隔离边界、概念"相关"格式、测试模式检测；新增问题解决 SOP + 5 个 failure mode | 这次我真用了！ |
 | 2026-06-25 | **v2.4** · 自测题"讲什么考什么"约束；原子笔记流程重构（步骤 2 筛选+生成骨架，步骤 5 缩为引导写定义）；新增概念示例嵌入（按触发条件自动匹配）；新增模块化测试框架（TESTING.md + test/ 目录）；目录优化重组 |  "什！么！他加了测！试！？" |
 | 2026-06-23 | **v2.3** · 8 项问题集中修复：步骤 0 静默配置检查 + 外部概念目录引导；删除 progress/last_section，只留 status；论文简称重名检测消歧；PDF 图片提取管线重构（pdfimages 优先、矢量图回退、尺寸上下限过滤）；笔记嵌入关键图片；课程底部导航列为必选模块；外部目录去重扫描 | 图片，我希望你乘乘的。 |
 | 2026-06-23 | **v2.2** · 主线 7→5 步，步骤5/6降级为独立模块；全文「术语」→「核心概念」；SUMMARY/延伸资源默认展开；PDF 图片禁用整页栅格化+尺寸过滤；末节拆解提醒 | 不端上来怎么测XD |

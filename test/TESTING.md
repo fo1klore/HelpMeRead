@@ -65,12 +65,17 @@ HelpMeRead/
 
 ## 测试全局设置
 
-- **测试论文**：`Attention Is All You Need`（arXiv:1706.03762），以下简称 **Transformer**
+- **测试论文 1**：`Attention Is All You Need`（arXiv:1706.03762），以下简称 **Transformer**
+  类型：研究论文（research），有原创方法 + 可复现实验
+  用途：全模块测试（T1-T13）
+- **测试论文 2**：`LLLMs: A Data-Driven Survey of Evolving Research on Limitations of Large Language Models`（arXiv:2505.19240），以下简称 **LLLMs**
+  类型：综述论文（survey），数据驱动的文献回顾
+  用途：新论文类型引入测试（T2 + T4 + T5）
 - **测试前准备**：
-  1. 确认 `test/test-config.json` 中 vault 路径为绝对路径
+  1. 确认 `test/test-config.json` 中 vault 路径为绝对路径、指向 `test-output/`
   2. 删除 `test-output/` 下所有旧产物（清理命令：`rm -rf test-output/HelpMeRead/`）
-  3. 若需测试步骤 0（首次运行引导），先删除 `~/.help-me-read.json` 再恢复。跳过步骤 0 测试时，确认 `~/.help-me-read.json` 存在且 vault 路径指向 `test-output/`
-- **测试执行**：所有产物写入 `test-output/HelpMeRead/`，不碰用户 vault
+  3. SKILL.md 步骤 0 已包含测试模式检测——`test/test-config.json` 存在时自动使用测试配置，产物写入 `test-output/`，无需手动切换生产配置
+- **测试执行**：所有产物写入 `test-output/HelpMeRead/`，不碰用户 vault。`~/.help-me-read.json` 在测试期间不会被读取或修改
 
 ---
 
@@ -84,8 +89,47 @@ HelpMeRead/
 2. 检查 `test-output/` 和 `test-output/HelpMeRead/` 目录存在（不存在则创建）
 3. 检查 PyMuPDF 是否可用：`pip list 2>/dev/null | grep PyMuPDF`
 4. 检查 poppler-utils 是否可用：`which pdfimages 2>/dev/null`
-5. 检查网络可达：抓取 `https://arxiv.org/abs/1706.03762` 确认可返回
+5. 检查网络可达：抓取 `https://arxiv.org/abs/1706.03762` 和 `https://arxiv.org/abs/2505.19240` 确认可返回
 6. 检查 Obsidian URI 格式：确认 `obsidian://open?vault=<vault名>&file=<路径>` 中 vault 名提取正确
+
+### T1-D：测试模式检测（验证 ㉑ 修复）
+
+> **目标**：验证 SKILL.md 步骤 0 新增的测试模式检测逻辑——`test/test-config.json` 存在时应被读取，而非 `~/.help-me-read.json`。
+
+#### 步骤
+
+> **零破坏原则**：T1-D 不修改、不备份、不破坏任何生产配置。所有判定通过观察产物落点 + 配置指纹（mtime + size）实现。
+
+1. 确认 `test/test-config.json` 中 `obsidian_vault` 指向 `test-output/`
+2. **记录** `~/.help-me-read.json` 的当前 mtime + size（如有）：
+   ```bash
+   stat -c '%s %Y' ~/.help-me-read.json > /tmp/prod_config_before
+   # 或在 PowerShell 下：Get-Item ~/.help-me-read.json | ForEach-Object "{0} {1}" -f $_.Length,$_.LastWriteTime
+   ```
+3. 跑**完整步骤 2**（课程 + 笔记 + 概念三件套全跑），而非最小流程——验证多产物路径下都走 test-config
+4. **观察产物落点**：确认全部新文件（课程、笔记、概念、QA 记录）都落在 `test-output/HelpMeRead/`，而非生产 vault
+5. **观察生产 vault**：确认生产 vault 目录（`~/.help-me-read.json` 指向的路径）下**没有**新增任何本测试产生的文件
+6. **观察配置指纹**：确认 `~/.help-me-read.json` 的 size + mtime 都未变化（双维度防 touch 误报）：
+
+```bash
+# 测试后再次记录
+stat -c '%s %Y' ~/.help-me-read.json > /tmp/prod_config_after
+diff /tmp/prod_config_before /tmp/prod_config_after && echo "PASS: config untouched" || echo "FAIL: config was modified"
+```
+
+#### 判定
+
+```
+T1-D 测试模式检测报告（关联 ㉑ / F0-2）
+
+[通过/失败] 全部产物（课程/笔记/概念/QA）落点在 test-output/HelpMeRead/
+[通过/失败] 生产 vault 无本测试产生的任何文件
+[通过/失败] ~/.help-me-read.json size + mtime 都未变化（双维度防 touch 误报）
+[通过/失败] test/test-config.json 被读取（产物路径匹配其 obsidian_vault）
+[通过/失败] 多产物路径无混用：课程/笔记/概念三类都走 test-config
+
+备注：________________________________
+```
 
 ### 判定
 
@@ -273,6 +317,62 @@ T4-C 自测题约束
 备注：________________________________
 ```
 
+### T4-D：课程末段完整性检查（验证 ⑯ / F2-8 修复）
+
+> **目标**：验证 SKILL.md 步骤 2 步骤 8 的三条件判据有效识别截断的课程文件。
+
+#### 步骤
+
+1. 跑完整步骤 2，生成完整课程到 `test-output/HelpMeRead/papers/<slug>/course/`
+2. 对每个课程文件执行三条件检查：
+   - **块配对**：`$` 个数偶数；` ``` ` 个数偶数；`> [!xxx]` 计数成对
+   - **末段有完整句**：末 200 字符内含 `.`/`。`/`!`/`！`/`?`/`？` 后接非空字符
+   - **末字符不在句中**：末字符不是 `,` `，` `:` `：` `;` `；` `、` `(` `（`
+3. 用 `bash` 跑快速断言：
+
+```bash
+# 块配对
+for f in test-output/HelpMeRead/papers/*/course/*.md; do
+  dollars=$(grep -o '\$' "$f" | wc -l)
+  fences=$(grep -o '\`\`\`' "$f" | wc -l)
+  echo "$f: dollars=$dollars fences=$fences"
+done
+
+# 末字符检查（多字节安全，Python 处理 UTF-8 避免字节切片错位）
+python3 -c "
+import os, glob
+for f in glob.glob('test-output/HelpMeRead/papers/*/course/*.md'):
+    with open(f, 'rb') as fh:
+        text = fh.read().decode('utf-8', errors='replace')
+    tail = text[-200:] if len(text) > 200 else text
+    last_char = text[-1] if text else ''
+    # 中间/起始标点集合
+    middle_punct = set(',，:：;；、(（')
+    has_complete = any(c in tail for c in ['.', '。', '!', '！', '?', '？', ';', '；', '…', '……'])
+    in_middle = last_char in middle_punct
+    print(f'{f}: last={last_char!r} complete_sent={has_complete} mid_char={in_middle}')
+"
+```
+
+> 末字符为 4 字节 emoji（如 `📎`）时 Python 仍按字符处理，`last_char` 是完整字符，判定正确。块配对命令仅作为快速断言，最终判定以 agent 跑三条件 + 人工抽查为准。
+
+4. 若有截断节，agent 应在用户没介入前自动重新生成
+
+#### 判定
+
+```
+T4-D 课程完整性报告（关联 ⑯ / F2-8）
+
+[通过/失败] 块配对：所有课程文件 $ 个数偶数
+[通过/失败] 块配对：所有课程文件 ``` 个数偶数
+[通过/失败] 块配对：所有 callout 块成对
+[通过/失败] 末段有完整句：所有课程末 200 字符内含完整句子
+[通过/失败] 末字符不在句中：所有课程末字符不是中间/起始标点
+[通过/失败] 自动重生成：截断节被自动识别并重生成
+
+备注：________________________________
+```
+
 ---
 
 ## T5：笔记生成
@@ -340,6 +440,44 @@ T6 概念筛选与骨架报告
 [通过/失败] ## 🔍 深入理解 已折叠（> [!help]-）
 [通过/失败] ## 相关 已填写
 [通过/失败] 可选区块按需填写（公式/结构/分析/延伸探索）
+
+备注：________________________________
+```
+
+### T6-D：概念笔记"## 相关"区块格式（验证 ⑳ / F5-3 修复）
+
+> **目标**：验证 v2.5 ⑳ 修复后，概念笔记的 `## 相关` 区块满足两个约束：(1) 每个链接附带关系说明；(2) 位置在 `## ⚖️ 分析` 与 `## 🔗 延伸探索` 之间。
+
+#### 步骤
+
+1. 列出 `test-output/HelpMeRead/concepts/*.md` 下所有概念笔记
+2. 对每个文件提取区块顺序：
+
+```bash
+# 提取所有 ## 二级标题及其顺序
+for f in test-output/HelpMeRead/concepts/*.md; do
+  echo "=== $f ==="
+  grep -E "^## " "$f" | head -20
+done
+```
+
+3. 对每个文件提取 `## 相关` 区块内容：
+
+```bash
+awk '/^## 相关/,/^## [^相关]/' test-output/HelpMeRead/concepts/self-attention.md
+```
+
+4. 检查每个链接后是否带 `——<一句话关系说明>`
+
+#### 判定
+
+```
+T6-D 概念笔记格式报告（关联 ⑳ / F5-3）
+
+[通过/失败] 位置：## 相关 位于 ## ⚖️ 分析 之后
+[通过/失败] 位置：## 相关 位于 ## 🔗 延伸探索 之前
+[通过/失败] 关系说明：所有 [[xxx]] 后跟 ——<一句话说明>
+[通过/失败] 无裸 wikilink 列表（如 [[a]]、[[b]]、[[c]] 这种逗号分隔形式）
 
 备注：________________________________
 ```
@@ -597,17 +735,23 @@ T12 跨论文功能报告
 
 ### 步骤
 
-1. 在课程学习中，问一个论文中未解释的概念（如"什么是 Layer Normalization？"）
-2. 检查 agent 是否首先给了一句话解释
-3. 检查 `to-learn/` 下是否自动生成了对应笔记（不需要用户确认）
-4. 检查 to-learn 笔记 frontmatter：`status: open`，`from` 指向当前论文
-5. 后续选择"搜索资料"，检查 `status → exploring`
-6. 后续选择"搞懂了"（毕业），检查 `status → resolved`，`resolved_to` 指向 `concepts/` 下文件
+1. **触发场景 1（显式提问）**：在课程学习中，问一个论文中未解释的概念（如"什么是 Layer Normalization？"）
+2. **触发场景 2（被动提及，验证 v2.5 ⑰ 修复）**：用户说"我不懂 Layer Normalization"或"Layer Normalization 这个概念我不熟悉"——agent 应识别信号词并触发
+3. **触发场景 3（纯名称提及，验证 v2.6 ㉓ 增强）**：用户只输入概念名"Layer Normalization"（无其他字符，移除标点后 ≤ 30 字符，无完整句子结构）——agent 也应触发
+4. 检查 agent 是否首先给了一句话解释
+5. 检查 `to-learn/` 下是否自动生成了对应笔记（不需要用户确认）
+6. 检查 to-learn 笔记 frontmatter：`status: open`，`from` 指向当前论文
+7. 后续选择"搜索资料"，检查 `status → exploring`
+8. 后续选择"搞懂了"（毕业），检查 `status → resolved`，`resolved_to` 指向 `concepts/` 下文件
 
 ### 判定
 
 ```
 T13 待学习功能报告
+
+触发场景 1（显式提问"什么是 X"）：[触发 / 未触发]
+触发场景 2（被动提及"我不懂 X"）：[触发 / 未触发]
+触发场景 3（纯名称"X"）：[触发 / 未触发]
 
 [通过/失败] 触发后先给一句话解释
 [通过/失败] to-learn 笔记自动生成（未询问）
@@ -624,7 +768,8 @@ T13 待学习功能报告
 
 | 日期 | 测试人 | 版本/commit | 执行模块 | 结果 | 备注 |
 |------|--------|-------------|----------|------|------|
-| | | | | | |
+| 2026-06-25 | Project Advisor | f00f52b (v2.4) | T9 + T8 | ✅ 通过 | 全流程产物验证 + 结构检查 |
+| 2026-06-25 | Project Advisor | f00f52b (v2.4) | T2（LLLMs） | ✅ 通过 | 类型判定：survey，第二条测试论文引入 |
 
 ---
 
@@ -665,3 +810,91 @@ T13 待学习功能报告
 ### 结论
 [通过 / 有条件通过 / 不通过]
 ```
+
+---
+
+## Help Me Read 测试报告
+
+**日期**：2026-06-25
+**版本/commit**：f00f52b (v2.4)
+**执行模块**：T9 + T8
+**测试配置**：test/test-config.json（vault: test-output/）
+
+### 汇总
+
+| 模块 | 结果 |
+|------|------|
+| T9 全流程衔接 | ✅ 通过 |
+| T8 产物结构 | ✅ 通过 |
+
+### T9 全流程衔接
+
+| 步骤 | 检查点 | 结果 | 详请 |
+|------|--------|------|------|
+| 0 | 配置文件存在，步骤静默跳过 | ✅ | `~/.help-me-read.json` 存在且指向 `test-output/`，零输出跳过 |
+| 1 | 输入 URL → 成功获取全文 → 类型判定 | ✅ | "研究论文"；arxiv HTML 182KB 全文 + 图片 + MathJax |
+| 2 | 课程全量生成 + 笔记生成 + 概念骨架生成 | ✅ | 4 节课程 + 1 篇笔记 + 3 个概念骨架 + MOC，全部完成 |
+| 3 | 列大纲 + 提醒待学习 | ✅ | 4 节标题可完整列出，待学习机制骨架可用 |
+| 4 | 打开第一节（URI 语法检查）+ 底部导航可用 | ✅ | 各节底部导航链接完整，首节 `← 无`，末节 `课程结束` |
+| 5 | 概念骨架已就绪 → agent 能开始引导 | ✅ | `concepts/` 下 3 个骨架文件 frontmatter 完整，`## 定义` 留空 |
+
+**测试论文**：Attention Is All You Need（arXiv:1706.03762）
+
+### T8 产物结构
+
+| 检查项 | 结果 |
+|--------|------|
+| 文献简称合规（kebab-case, ≤6 词） | ✅ `attention-is-all-you-need` |
+| 笔记路径合规 | ✅ `papers/attention-is-all-you-need/HMR-attention-is-all-you-need.md` |
+| 课程文件路径合规（两位序号 + 英文） | ✅ `01-why-attention.md` 等 4 个 |
+| 原子笔记路径合规 | ✅ `concepts/self-attention.md` 等 3 个 |
+| 笔记 frontmatter 字段完整 | ✅ 13/13 字段（title/aliases/authors/year/venue/area/type/source/status/sections/tags/up/related） |
+| 课程 frontmatter 字段完整 | ✅ 6/6 字段（title/course/section/prev/next） |
+| 原子笔记 frontmatter 字段完整 | ✅ 7/7 字段（title/aliases/type:concept/area/defined_in/up/tags） |
+| 图片命名合规（figure-N.png） | ✅ 3 张（figure-1 ~ figure-3），均 > 10KB |
+| 课程图片引用 | ✅ 末节嵌入 2 张，笔记嵌入 2 张 |
+| 底部导航 | ✅ 首节 `← 无`，末节 `课程结束`，全部含上下节链接 |
+
+### 结论
+
+✅ **通过**
+
+---
+
+## T14：临时文件清理（验证 ⑱ / F1-5 修复）
+
+**目标**：验证 SKILL.md 步骤 1 新增的临时文件清理约束——抓取后立即清理中间 HTML 文件，不散落工作区根目录。
+
+### 步骤
+
+1. 在跑步骤 1 前，先记录项目根目录和 `test-output/` 的初始 `*.html` 文件清单
+2. 跑完整步骤 1（抓取 arxiv HTML 或网页）
+3. 跑完后再次扫描：
+
+```bash
+# 检查根目录是否有 HTML 残留
+ls *.html 2>/dev/null
+
+# 检查 test-output/ 根目录是否有 HTML 残留
+ls test-output/*.html 2>/dev/null
+
+# 若需保留原始抓取，期望在 test-output/HelpMeRead/papers/<slug>/_source.html
+find test-output -name "_source.html" 2>/dev/null
+```
+
+4. 预期：根目录无 `*.html`，中间 HTML 不在工作区持久保留
+5. 若测试需要保留以供复现，允许存一份到 `papers/<slug>/_source.html`
+
+### 判定
+
+```
+T14 临时文件清理报告（关联 ⑱ / F1-5）
+
+[通过/失败] 项目根目录无 *.html 残留
+[通过/失败] test-output/ 根目录无 *.html 残留（如需保留，已移入 papers/<slug>/_source.html）
+[通过/失败] 临时文件清理在步骤 1 完成后立即执行（不遗留到步骤 2 之后）
+
+备注：________________________________
+```
+
+全流程 0→5 无断裂，所有产物符合命名约定和 frontmatter 规范。本次测试建立了 v2.4 的基线。
