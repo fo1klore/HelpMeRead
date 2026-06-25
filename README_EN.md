@@ -14,7 +14,7 @@ Turn academic papers into **learnable courses** and a **searchable knowledge bas
 
 - Reorganized by **learning path**, each lesson focuses on 1-2 core concepts with everyday analogies
 - Flexible lesson count (1-7+), with on-demand "redo section N" / "deep dive section N"
-- Each lesson includes: objectives, core explanation (analogy + formulas + **paper figures**), optional code implementation, self-check questions (answers collapsed), curated external resources
+- Each lesson includes: objectives, core explanation (analogy + formulas + **paper figures** + **embedded examples**), optional code implementation, self-check questions (answers collapsed), curated external resources
 - All courses in Markdown with Obsidian-compatible syntax (callouts, wikilinks, MathJax), sharing wikilinks and formula rendering with your notes
 
 ### 📝 Notes — structured knowledge base
@@ -29,10 +29,10 @@ Turn academic papers into **learnable courses** and a **searchable knowledge bas
 
 ### 📝 Atomic Notes — low-friction decomposition
 
-- Agent pre-builds scaffolding files (frontmatter / provenance / related links filled), **you only write "what this thing is in your own words"**
-- Chat-guided one-by-one, with visible progress
+- Concept filtering first: only concepts defined by the paper and contributing to its contribution are included — no clutter
+- Agent pre-builds scaffolding files (frontmatter / provenance / deep insights / related links filled), **you only write "what this thing is in your own words"**
+- Scaffolding generated during course creation — start writing definitions right after learning, no waiting
 - Cross-paper dedup: same term across papers appends provenance, no duplicate files
-- True knowledge internalization — think, don't file-manage
 
 ### 💬 Q&A — verified, precise answers
 
@@ -119,12 +119,15 @@ Title-only input → agent searches and confirms with you before proceeding.
 ```
 HelpMeRead/
 ├── SKILL.md                                     # Skill core: triggers, orchestration, full flow
+├── test/
+│   ├── test-config.json                         # Test configuration
+│   └── TESTING.md                               # Modular test framework
 ├── references/
-│   ├── obsidian-note-template.md                # Five note templates (scaffolding, to-learn, supplement)
-│   ├── course-design-guide.md                   # Three course design guides (figures, resources)
-│   ├── qa-standards.md                          # Q&A standards (five-tier tags + back-check)
+│   ├── obsidian-note-template.md                # Five note templates
+│   ├── course-design-guide.md                   # Three course design guides
+│   ├── qa-standards.md                          # Q&A standards
 │   └── frontmatter-schema.md                    # Full field frontmatter schema + MOC
-├── examples/                                    # Complete samples (Transformer paper)
+├── examples/                                    # Complete samples
 ├── README.md
 ├── README_EN.md
 ├── LICENSE
@@ -135,6 +138,7 @@ HelpMeRead/
 
 | Date | Changes | 💭 Dev Notes |
 |---|---|---|
+| 2026-06-25 | **v2.4** · Self-test constraint; atomic note workflow overhaul (step 2 filtering + scaffolding, step 5 → definition guidance); embedded concept examples (auto-triggered by condition); modular test framework (TESTING.md + test/); directory cleanup |  "WHAT?! He added TESTS!?" |
 | 2026-06-23 | **v2.3** · 8-issue batch fix: silent step 0 config check + external concept dirs onboarding; removed progress/last_section, status only; paper slug collision detection & disambiguation; PDF image pipeline overhaul (pdfimages priority, vector fallback, size bounds filtering); notes embed key figures; bottom nav mandatory in courses; external dir dedup scan | Images, please behave yourselves. |
 | 2026-06-23 | **v2.2** · Main flow 7→5 steps, steps 5&6 downgraded to cross-cutting modules; all "term" → "core concept"; SUMMARY/external resources callouts now expanded by default; PDF images: banned full-page rasterization + size filtering; final lesson decomposition reminder | How else am I supposed to test it? XD |
 | 2026-06-22 | **v2.1** · Full course generation; image extraction optimization; new Concepts blocks; improved note decomposition guidance (evaluate → back-check → supplement → fix); Obsidian URI file opening; course map | Oi! Shipping without testing again, huh?! |
