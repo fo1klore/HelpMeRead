@@ -75,7 +75,7 @@ HelpMeRead/
   1. 确认 `test/test-config.json` 中 vault 路径为绝对路径、指向 `test-output/`
   2. 删除 `test-output/` 下所有旧产物（清理命令：`rm -rf test-output/HelpMeRead/`）
   3. SKILL.md 步骤 0 已包含测试模式检测——`test/test-config.json` 存在时自动使用测试配置，产物写入 `test-output/`，无需手动切换生产配置
-- **测试执行**：所有产物写入 `test-output/HelpMeRead/`，不碰用户 vault。`~/.help-me-read.json` 在测试期间不会被读取或修改
+- **测试执行**：所有产物写入 `test-output/HelpMeRead/`，不碰用户 vault。生产配置（运行时按 SKILL.md 步骤 0 动态确定路径）在测试期间不会被读取或修改
 
 ---
 
@@ -94,26 +94,29 @@ HelpMeRead/
 
 ### T1-D：测试模式检测（验证 ㉑ 修复）
 
-> **目标**：验证 SKILL.md 步骤 0 新增的测试模式检测逻辑——`test/test-config.json` 存在时应被读取，而非 `~/.help-me-read.json`。
+> **目标**：验证 SKILL.md 步骤 0 新增的测试模式检测逻辑——`test/test-config.json` 存在时应被读取，而非生产配置文件。
 
 #### 步骤
 
 > **零破坏原则**：T1-D 不修改、不备份、不破坏任何生产配置。所有判定通过观察产物落点 + 配置指纹（mtime + size）实现。
 
 1. 确认 `test/test-config.json` 中 `obsidian_vault` 指向 `test-output/`
-2. **记录** `~/.help-me-read.json` 的当前 mtime + size（如有）：
+2. **确定生产配置路径**（按 SKILL.md 步骤 0 逻辑）：存在 `.claude/` → `.claude/skills/help-me-read/help-me-read.json`，否则 `~/.claude/skills/help-me-read/help-me-read.json`
+3. **记录**生产配置文件的当前 mtime + size（如有）：
    ```bash
-   stat -c '%s %Y' ~/.help-me-read.json > /tmp/prod_config_before
-   # 或在 PowerShell 下：Get-Item ~/.help-me-read.json | ForEach-Object "{0} {1}" -f $_.Length,$_.LastWriteTime
+   export PROD_CONFIG=".claude/skills/help-me-read/help-me-read.json"
+   [ ! -f ".claude/skills/help-me-read/help-me-read.json" ] && PROD_CONFIG="$HOME/.claude/skills/help-me-read/help-me-read.json"
+   stat -c '%s %Y' "$PROD_CONFIG" > /tmp/prod_config_before 2>/dev/null
+   # 或在 PowerShell 下：(Get-Item "$env:USERPROFILE\.claude\skills\help-me-read\help-me-read.json" -ErrorAction SilentlyContinue) | ForEach-Object {"{0} {1}" -f $_.Length,$_.LastWriteTime} > $env:TEMP\prod_config_before.txt
    ```
-3. 跑**完整步骤 2**（课程 + 笔记 + 概念三件套全跑），而非最小流程——验证多产物路径下都走 test-config
-4. **观察产物落点**：确认全部新文件（课程、笔记、概念、QA 记录）都落在 `test-output/HelpMeRead/`，而非生产 vault
-5. **观察生产 vault**：确认生产 vault 目录（`~/.help-me-read.json` 指向的路径）下**没有**新增任何本测试产生的文件
-6. **观察配置指纹**：确认 `~/.help-me-read.json` 的 size + mtime 都未变化（双维度防 touch 误报）：
+4. 跑**完整步骤 2**（课程 + 笔记 + 概念三件套全跑），而非最小流程——验证多产物路径下都走 test-config
+5. **观察产物落点**：确认全部新文件（课程、笔记、概念、QA 记录）都落在 `test-output/HelpMeRead/`，而非生产 vault
+6. **观察生产 vault**：确认生产 vault 目录（生产配置中 `obsidian_vault` 指向的路径）下**没有**新增任何本测试产生的文件
+7. **观察配置指纹**：确认生产配置文件的 size + mtime 都未变化（双维度防 touch 误报）：
 
 ```bash
 # 测试后再次记录
-stat -c '%s %Y' ~/.help-me-read.json > /tmp/prod_config_after
+stat -c '%s %Y' "$PROD_CONFIG" > /tmp/prod_config_after
 diff /tmp/prod_config_before /tmp/prod_config_after && echo "PASS: config untouched" || echo "FAIL: config was modified"
 ```
 
@@ -124,7 +127,7 @@ T1-D 测试模式检测报告（关联 ㉑ / F0-2）
 
 [通过/失败] 全部产物（课程/笔记/概念/QA）落点在 test-output/HelpMeRead/
 [通过/失败] 生产 vault 无本测试产生的任何文件
-[通过/失败] ~/.help-me-read.json size + mtime 都未变化（双维度防 touch 误报）
+[通过/失败] 生产配置文件 size + mtime 都未变化（双维度防 touch 误报）
 [通过/失败] test/test-config.json 被读取（产物路径匹配其 obsidian_vault）
 [通过/失败] 多产物路径无混用：课程/笔记/概念三类都走 test-config
 

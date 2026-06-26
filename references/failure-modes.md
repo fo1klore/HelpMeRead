@@ -53,16 +53,17 @@
 
 **检测命令**：
 ```bash
-# 确认配置文件存在且 vault 路径有效
-cat ~/.help-me-read.json   # Windows: %USERPROFILE%\.help-me-read.json
-jq -r '.obsidian_vault' ~/.help-me-read.json | xargs ls -d
+# 生产配置路径按 SKILL.md 步骤 0 动态确定（优先项目 .claude/，否则 ~/.claude/）
+cat .claude/skills/help-me-read/help-me-read.json 2>/dev/null || cat ~/.claude/skills/help-me-read/help-me-read.json
+jq -r '.obsidian_vault' .claude/skills/help-me-read/help-me-read.json 2>/dev/null | xargs ls -d || \
+  jq -r '.obsidian_vault' ~/.claude/skills/help-me-read/help-me-read.json | xargs ls -d
 ```
 
 ### F0-2：测试配置不可见——agent 始终读写生产配置
 
 **现象**：测试时产物写入生产 vault 而非 `test-output/`；生产配置被测试参数覆盖。
 
-**原因**：SKILL.md 步骤 0 硬编码 `~/.help-me-read.json`，未检测 `test/test-config.json` 的存在。
+**原因**：SKILL.md 步骤 0 未检测 `test/test-config.json` 的存在，agent 始终操作生产配置。
 
 **修复**：
 1. 确认 SKILL.md 步骤 0 包含"测试模式检测"段落——先检查 `test/test-config.json`，存在则使用测试配置
@@ -442,8 +443,8 @@ grep -A 5 "^## 相关" test-output/HelpMeRead/concepts/*.md
 
 ```bash
 # === 环境 ===
-# 配置文件存在？
-cat ~/.help-me-read.json
+# 配置文件存在？路径按 SKILL.md 步骤 0 动态确定
+cat .claude/skills/help-me-read/help-me-read.json 2>/dev/null || cat ~/.claude/skills/help-me-read/help-me-read.json
 
 # PyMuPDF 可用？
 pip list 2>/dev/null | grep PyMuPDF

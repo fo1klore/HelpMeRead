@@ -25,3 +25,5 @@ ISSUES.md
 
 # 测试产物
 test-output/
+# 项目级自动生成的 skill 配置（含 vault 路径等本地信息）
+.claude/skills/

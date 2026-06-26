@@ -1,6 +1,6 @@
 # 笔记 frontmatter schema
 
-本文件定义六类产物：文献总结笔记/原子笔记/待学习笔记/问答记录/课程文件/MOC 的 frontmatter 全字段，以及配置文件 `~/.help-me-read.json`。让 Obsidian 的 Bases / graph / 搜索能力真正可用。
+本文件定义六类产物：文献总结笔记/原子笔记/待学习笔记/问答记录/课程文件/MOC 的 frontmatter 全字段，以及配置文件（运行时自动生成到 `.claude/skills/help-me-read/help-me-read.json`）。让 Obsidian 的 Bases / graph / 搜索能力真正可用。
 
 ---
 
@@ -185,7 +185,7 @@ tags:
 
 ---
 
-## 配置文件（~/.help-me-read.json）
+## 配置文件（.claude/skills/help-me-read/help-me-read.json）
 
 SKILL.md 步骤 0 管理。字段：
 

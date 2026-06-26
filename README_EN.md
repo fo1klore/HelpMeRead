@@ -68,7 +68,7 @@ Title-only input → agent searches and confirms with you before proceeding.
 
 ---
 
-## ⚙️ Configuration (~/.help-me-read.json)
+## ⚙️ Configuration (.claude/skills/help-me-read/help-me-read.json)
 
 | Item | Default | Notes |
 |---|---|---|

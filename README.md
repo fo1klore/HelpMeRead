@@ -68,7 +68,7 @@
 
 ---
 	
-## ⚙️ 配置（~/.help-me-read.json）
+## ⚙️ 配置（.claude/skills/help-me-read/help-me-read.json）
 
 | 项 | 默认 | 说明 |
 |---|---|---|
