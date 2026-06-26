@@ -324,10 +324,7 @@ T4-C 自测题约束
 #### 步骤
 
 1. 跑完整步骤 2，生成完整课程到 `test-output/HelpMeRead/papers/<slug>/course/`
-2. 对每个课程文件执行三条件检查：
-   - **块配对**：`$` 个数偶数；` ``` ` 个数偶数；`> [!xxx]` 计数成对
-   - **末段有完整句**：末 200 字符内含 `.`/`。`/`!`/`！`/`?`/`？` 后接非空字符
-   - **末字符不在句中**：末字符不是 `,` `，` `:` `：` `;` `；` `、` `(` `（`
+2. 对每个课程文件执行同 SKILL.md 步骤 2 的三条件判据（块配对、末段完整句、末字符不在句中）
 3. 用 `bash` 跑快速断言：
 
 ```bash
@@ -764,15 +761,6 @@ T13 待学习功能报告
 
 ---
 
-## 测试执行记录
-
-| 日期 | 测试人 | 版本/commit | 执行模块 | 结果 | 备注 |
-|------|--------|-------------|----------|------|------|
-| 2026-06-25 | Project Advisor | f00f52b (v2.4) | T9 + T8 | ✅ 通过 | 全流程产物验证 + 结构检查 |
-| 2026-06-25 | Project Advisor | f00f52b (v2.4) | T2（LLLMs） | ✅ 通过 | 类型判定：survey，第二条测试论文引入 |
-
----
-
 ## 测试报告格式
 
 测试完成后，agent 输出完整报告。
@@ -810,54 +798,6 @@ T13 待学习功能报告
 ### 结论
 [通过 / 有条件通过 / 不通过]
 ```
-
----
-
-## Help Me Read 测试报告
-
-**日期**：2026-06-25
-**版本/commit**：f00f52b (v2.4)
-**执行模块**：T9 + T8
-**测试配置**：test/test-config.json（vault: test-output/）
-
-### 汇总
-
-| 模块 | 结果 |
-|------|------|
-| T9 全流程衔接 | ✅ 通过 |
-| T8 产物结构 | ✅ 通过 |
-
-### T9 全流程衔接
-
-| 步骤 | 检查点 | 结果 | 详请 |
-|------|--------|------|------|
-| 0 | 配置文件存在，步骤静默跳过 | ✅ | `~/.help-me-read.json` 存在且指向 `test-output/`，零输出跳过 |
-| 1 | 输入 URL → 成功获取全文 → 类型判定 | ✅ | "研究论文"；arxiv HTML 182KB 全文 + 图片 + MathJax |
-| 2 | 课程全量生成 + 笔记生成 + 概念骨架生成 | ✅ | 4 节课程 + 1 篇笔记 + 3 个概念骨架 + MOC，全部完成 |
-| 3 | 列大纲 + 提醒待学习 | ✅ | 4 节标题可完整列出，待学习机制骨架可用 |
-| 4 | 打开第一节（URI 语法检查）+ 底部导航可用 | ✅ | 各节底部导航链接完整，首节 `← 无`，末节 `课程结束` |
-| 5 | 概念骨架已就绪 → agent 能开始引导 | ✅ | `concepts/` 下 3 个骨架文件 frontmatter 完整，`## 定义` 留空 |
-
-**测试论文**：Attention Is All You Need（arXiv:1706.03762）
-
-### T8 产物结构
-
-| 检查项 | 结果 |
-|--------|------|
-| 文献简称合规（kebab-case, ≤6 词） | ✅ `attention-is-all-you-need` |
-| 笔记路径合规 | ✅ `papers/attention-is-all-you-need/HMR-attention-is-all-you-need.md` |
-| 课程文件路径合规（两位序号 + 英文） | ✅ `01-why-attention.md` 等 4 个 |
-| 原子笔记路径合规 | ✅ `concepts/self-attention.md` 等 3 个 |
-| 笔记 frontmatter 字段完整 | ✅ 13/13 字段（title/aliases/authors/year/venue/area/type/source/status/sections/tags/up/related） |
-| 课程 frontmatter 字段完整 | ✅ 6/6 字段（title/course/section/prev/next） |
-| 原子笔记 frontmatter 字段完整 | ✅ 7/7 字段（title/aliases/type:concept/area/defined_in/up/tags） |
-| 图片命名合规（figure-N.png） | ✅ 3 张（figure-1 ~ figure-3），均 > 10KB |
-| 课程图片引用 | ✅ 末节嵌入 2 张，笔记嵌入 2 张 |
-| 底部导航 | ✅ 首节 `← 无`，末节 `课程结束`，全部含上下节链接 |
-
-### 结论
-
-✅ **通过**
 
 ---
 
