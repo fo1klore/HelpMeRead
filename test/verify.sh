@@ -1,0 +1,71 @@
+#!/bin/bash
+# test/verify.sh — Help Me Read 一键产物验证
+ERRORS=0
+TEST_DIR="test-output/HelpMeRead"
+if [ -n "$1" ]; then
+  TEST_DIR="$1"
+fi
+red() { printf '\033[31m%s\033[0m\n' "$1"; }
+green() { printf '\033[32m%s\033[0m\n' "$1"; }
+check() {
+  local desc="$1"; shift
+  if eval "$@" 2>/dev/null; then
+    green "  ✅ $desc"
+  else
+    red "  ❌ $desc"
+    ERRORS=$((ERRORS + 1))
+  fi
+}
+echo "========================================="
+echo " Help Me Read —— 产物验证"
+echo " 目标目录: $TEST_DIR"
+echo "========================================="
+echo ""
+echo "--- 结构检查 ---"
+check "产物根目录存在" "test -d '$TEST_DIR'"
+check "papers/ 目录存在" "test -d '$TEST_DIR/papers'"
+check "concepts/ 目录存在" "test -d '$TEST_DIR/concepts'"
+echo ""
+echo "--- Frontmatter 检查 ---"
+for md_file in "$TEST_DIR"/papers/*/notes/*.md "$TEST_DIR"/concepts/*.md; do
+  [ -f "$md_file" ] || continue
+  fname="$(basename "$md_file")"
+  check "$fname 以 --- 开头" "head -1 '$md_file' | grep -q '^---'"
+  check "$fname 有 title 字段" "head -10 '$md_file' | grep -q '^title:'"
+done
+echo ""
+echo "--- Callout 格式检查 ---"
+for md_file in "$TEST_DIR"/papers/*/notes/*.md "$TEST_DIR"/concepts/*.md "$TEST_DIR"/papers/*/lessons/*.md; do
+  [ -f "$md_file" ] || continue
+  fname="$(basename "$md_file")"
+  opens=$(grep -c '^>[[:space:]]*\[!' "$md_file" 2>/dev/null || echo 0)
+  total_block=$(grep -c '^>' "$md_file" 2>/dev/null || echo 0)
+  if [ "$opens" -gt 0 ] && [ "$total_block" -gt 0 ]; then
+    green "  ✅ $fname: $opens 个 callout"
+  elif [ "$opens" -gt 0 ]; then
+    red "  ❌ $fname: 有 callout 标记但无内容"
+    ERRORS=$((ERRORS + 1))
+  fi
+done
+echo ""
+echo "--- 图片检查 ---"
+for img in "$TEST_DIR"/papers/*/course/assets/*.png "$TEST_DIR"/papers/*/course/assets/*.jpg "$TEST_DIR"/papers/*/course/assets/*.jpeg; do
+  [ -f "$img" ] || continue
+  iname="$(basename "$img")"
+  dims=$(file --mime-type "$img" 2>/dev/null)
+  if echo "$dims" | grep -q 'image/'; then
+    green "  ✅ $iname (有效图片)"
+  else
+    red "  ❌ $iname (非图片文件)"
+    ERRORS=$((ERRORS + 1))
+  fi
+done
+echo ""
+echo "========================================="
+if [ $ERRORS -eq 0 ]; then
+  green "  🎉 全部检查通过"
+else
+  red "  ❌ $ERRORS 项检查失败"
+fi
+echo "========================================="
+exit $ERRORS
