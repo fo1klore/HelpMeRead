@@ -140,6 +140,7 @@ HelpMeRead/
 
 | Date | Changes | 💭 Dev Notes |
 |---|---|---|
+| 2026-06-29 | **v2.5.4** · PDF cleanup + atomic note wikilink consistency: URL-downloaded PDFs auto-delete after generation; step 2 concept mapping table prevents wikilink naming mismatches; obsidian-note-template.md `## Related` updated to pipe syntax; failure-modes.md new F1-6 + F5-4 entries | I really need to control you |
 | 2026-06-29 | **v2.5.3** · Executable verification system: new test/preflight.sh (mode detection via script, not LLM reading comprehension); new test/check-deps.sh (unified dependency check for image extraction); new test/verify.sh (one-command artifact validation); SKILL.md step 2 parallelism clarified (A. concept list → B. parallel skeleton + course content); issue-resolution-workflow.md Phase 5 bilingual README sync gate | The flesh of mechanics is weak — let intelligence ascend |
 | 2026-06-26 | **v2.5.1** · Minimalist review + redundancy cleanup: deleted TESTING.md history & execution log (-62 lines); centralized 3-condition check to SKILL.md (referenced elsewhere); SKILL.md step 5 optional blocks → reference; classification count fix (4→6 types); YAML tab indentation fix; test config path placeholder | Didn't get fat, but got leaner! |
 | 2026-06-26 | **v2.5** · 6-issue batch fix + workflow standardization: truncation check (3-condition), to-learn trigger expansion, temp file cleanup, examples isolation, concept "Related" format, test mode detection; new issue resolution SOP + 5 failure modes | I *actually* used it this time! |

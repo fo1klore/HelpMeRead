@@ -170,6 +170,26 @@ identify course/assets/*.png   # ImageMagick，查看实际尺寸
 ls *.html 2>/dev/null
 ```
 
+### F1-6：URL 下载的 PDF 未清理
+
+**现象**：步骤 1 完成后，根源 URL 下载的 PDF 文件仍残留在磁盘上（用户提供的本地 PDF 不受影响）。
+
+**原因**（按概率排序）：
+1. SKILL.md 步骤 1 的"输入文件分类与清理"规则未被 agent 执行——agent 未识别输入来源，未触发清理
+2. 步骤 1 内子步骤失败，PDF 被保留（预期行为，非 bug）
+3. 清理权限不足（文件被占用/只读）
+
+**修复**：
+1. 确认步骤 1 末尾已包含"输入文件分类与清理"指令
+2. 检查 PDF 是否为 URL 下载（非用户提供的本地路径）
+3. 手动删除或确认文件状态
+
+**检测命令**：
+```bash
+# 检查项目根目录及 papers/ 下是否有残留 PDF（排除用户提供的本地路径）
+find . -maxdepth 2 -name "*.pdf" -not -path "./references/*" 2>/dev/null
+```
+
 ---
 
 ## 步骤 2：课程/笔记/概念生成
@@ -435,6 +455,38 @@ find test-output/HelpMeRead/ -type f -name "*.md" | sort
 ```bash
 # 检查概念笔记相关区块格式
 grep -A 5 "^## 相关" test-output/HelpMeRead/concepts/*.md
+```
+
+### F5-4：原子笔记双链命名与文件名不一致
+
+**现象**：原子笔记 `## 相关` 或正文中的 `[[wikilink]]` 双链文本与实际目标文件不匹配，Obsidian 将其视为新笔记创建，产生重复条目。
+
+**原因**（按概率排序）：
+1. 概念映射表未在步骤 2 构建——agent 用自由文本命名（大小写/空格/别名），与 kebab-case 文件名不匹配
+2. 映射表已构建但 agent 未从中取值——步骤指令约束不足
+3. `## 相关` 模板未指定管语法（`[[filename_slug|显示文本]]`）——agent 沿用旧格式
+
+**修复**：
+1. 确认 SKILL.md 步骤 2 包含"构建概念映射表"指令
+2. 确认 `references/obsidian-note-template.md` 的 `## 相关` 模板已更新为管语法
+3. 所有 `concepts/*.md` 扫描一遍，修正不匹配的双链
+
+**检测命令**：
+```bash
+# 扫描 concepts/ 中所有 [[wikilink]]，检查是否有对应文件（处理 `[[X|Y]]` 管语法）
+python3 -c "
+import glob, re
+for f in glob.glob('test-output/HelpMeRead/concepts/*.md'):
+    with open(f) as fh:
+        content = fh.read()
+    # 提取所有 [[...]]，去除 |Y 显示文本
+    links = re.findall(r'\[\[([^\]|]+)(?:\|[^\]]+)?\]\]', content)
+    for link in links:
+        target = f'test-output/HelpMeRead/concepts/{link}.md'
+        if not glob.glob(target):
+            with open('/dev/stderr', 'w') as err:
+                err.write(f'MISSING: {link}.md (referenced in {f})\n')
+"
 ```
 
 ---
