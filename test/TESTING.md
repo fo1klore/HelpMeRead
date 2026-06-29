@@ -61,6 +61,11 @@ HelpMeRead/
 | 多处同时改动 | 各对应模块 + T9 全流程 |
 | 新论文类型引入 | T2 + T4 + T5 |
 
+### 一键验证
+
+执行 `bash test/verify.sh` 可自动运行所有结构化检查。验证脚本会自动扫描 `test-output/HelpMeRead/` 目录。
+可指定目标目录：`bash test/verify.sh /path/to/vault/HelpMeRead`
+
 ---
 
 ## 测试全局设置

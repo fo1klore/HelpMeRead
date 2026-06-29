@@ -25,5 +25,9 @@ ISSUES.md
 
 # 测试产物
 test-output/
+
+# 测试模式标记文件（touch 此文件后 preflight.sh 自动走测试模式）
+.test-mode
+
 # 项目级自动生成的 skill 配置（含 vault 路径等本地信息）
 .claude/skills/
