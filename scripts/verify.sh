@@ -1,5 +1,5 @@
 #!/bin/bash
-# test/verify.sh — Help Me Read 一键产物验证
+# scripts/verify.sh — Help Me Read 一键产物验证
 ERRORS=0
 TEST_DIR="test-output/HelpMeRead"
 if [ -n "$1" ]; then
@@ -58,6 +58,23 @@ for img in "$TEST_DIR"/papers/*/course/assets/*.png "$TEST_DIR"/papers/*/course/
   else
     red "  ❌ $iname (非图片文件)"
     ERRORS=$((ERRORS + 1))
+  fi
+done
+echo ""
+echo "--- 概念热身检查 ---"
+for course_file in "$TEST_DIR"/papers/*/course/*.md; do
+  [ -f "$course_file" ] || continue
+  fname=$(basename "$course_file")
+  check "$fname 包含概念热身(Warm-up) callout" "grep -q '🏋️.*概念热身' '$course_file'"
+done
+echo ""
+echo "--- 概念双链解释检查 ---"
+for course_file in "$TEST_DIR"/papers/*/course/*.md; do
+  [ -f "$course_file" ] || continue
+  fname=$(basename "$course_file")
+  first_link=$(grep -n '\\[\\[' "$course_file" 2>/dev/null | head -1 | cut -d: -f1)
+  if [ -n "$first_link" ] && [ "$first_link" -gt 1 ]; then
+    check "$fname 概念首次出现前有预热解释" "head -\$((first_link - 1)) '$course_file' | grep -q '概念热身\|通俗解释\|一句话'"
   fi
 done
 echo ""
