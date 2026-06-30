@@ -1,5 +1,5 @@
 #!/bin/bash
-# test/preflight.sh — Help Me Read 模式检测
+# scripts/preflight.sh — Help Me Read 模式检测
 # 输出 MODE 和 CONFIG_PATH，agent 据此决定走测试还是生产路径
 #
 # 优先级（先命中先走）：

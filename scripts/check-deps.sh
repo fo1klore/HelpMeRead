@@ -1,5 +1,5 @@
 #!/bin/bash
-# test/check-deps.sh — Help Me Read 图片提取依赖检测
+# scripts/check-deps.sh — Help Me Read 图片提取依赖检测
 # 输出可用工具清单，agent 据此查表选择最优提取路径
 
 echo "NETWORK=$(curl -s -o /dev/null -w "%{http_code}" https://arxiv.org 2>/dev/null || echo "FAIL")"

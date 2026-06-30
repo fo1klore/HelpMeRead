@@ -63,8 +63,8 @@ HelpMeRead/
 
 ### 一键验证
 
-执行 `bash test/verify.sh` 可自动运行所有结构化检查。验证脚本会自动扫描 `test-output/HelpMeRead/` 目录。
-可指定目标目录：`bash test/verify.sh /path/to/vault/HelpMeRead`
+执行 `bash scripts/verify.sh` 可自动运行所有结构化检查。验证脚本会自动扫描 `test-output/HelpMeRead/` 目录。
+可指定目标目录：`bash scripts/verify.sh /path/to/vault/HelpMeRead`
 
 ---
 
