@@ -140,6 +140,7 @@ HelpMeRead/
 
 | 日期 | 变更 | 📝 开发者寄语 |
 |---|---|---|
+| 2026-07-01 | **v2.5.6** · 课程原文出处格式修正：course-design-guide.md 中原文位置从行内斜体改为独立成行 +  空行 + `📖` 前缀 | 即使这样也改变不了什么... |
 | 2026-06-30 | **v2.5.5** · 可执行脚本从 test/ 迁移到 scripts/（解除 ZIP 下载的 export-ignore 限制）；SKILL.md 和 TESTING.md 引用路径同步更新；Issue ④ 课程 0 基础约束（读者画像声明 + 概念热身模块 + 边界场景/豁免规则/重试降级 + 完整性检查概念覆盖 + F2-9/F2-10）；verify.sh 新增概念热身/双链解释检查段 | 你疑似有点傲慢了 |
 | 2026-06-29 | **v2.5.4** · PDF 清理 + 原子笔记双链一致性修复：URL 下载的 PDF 在生成后自动删除；步骤 2 新增概念映射表避免双链命名不一致；obsidian-note-template.md 模板 `## 相关` 改为管语法；failure-modes.md 新增 F1-6 + F5-4 条目 | 我真得控制你了 |
 | 2026-06-29 | **v2.5.3** · 可执行验证体系建设：新增 test/preflight.sh（模式检测脚本化，不再靠 LLM 阅读理解）；新增 test/check-deps.sh（图片提取依赖统一检测）；新增 test/verify.sh（一键产物验证）；SKILL.md 步骤 2 并行约束明确化（A.先确定概念列表 → B.并行生成骨架+课程）；issue-resolution-workflow.md Phase 5 新增双语 README 同步门禁 | 机械苦弱，智能飞升 |
