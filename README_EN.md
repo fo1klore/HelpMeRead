@@ -12,7 +12,7 @@ Turn academic papers into **learnable courses** and a **searchable knowledge bas
 
 ## Features
 
-- **🎓 Courses** — papers reorganized by progressive learning path (1-7+ lessons), with analogies, formulas, paper figures, embedded examples, and self-check questions
+- **🎓 Courses** — papers reorganized by progressive learning path (1-7+ lessons), with analogies, formulas, paper figures, embedded examples, and self-check questions. Each lesson opens with a **Core Concepts** warmup and a **Prerequisite Terms** block. Non-source claims are tagged `[Background]` or `[Inferred]`.
 - **📝 Notes** — structured knowledge base with source-verified tags (`[原文·Verified]` / `[Inferred]` / ...)
 - **📝 Atomic Notes** — agent pre-builds scaffolding; you write definitions in your own words; cross-paper dedup
 - **💬 Q&A** — concise, source-cited answers with five-tier verification tags
