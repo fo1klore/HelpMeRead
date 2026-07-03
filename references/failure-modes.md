@@ -13,7 +13,8 @@
 5. [步骤 3-4：学习阶段](#步骤-3-4-学习阶段)
 6. [步骤 5：原子笔记拆分](#步骤-5-原子笔记拆分)
 7. [产物后检查](#产物后检查)
-8. [附录：检测命令速查](#附录检测命令速查)
+8. [步骤 6：MOC 生命周期](#步骤-6moc-生命周期)
+9. [附录：检测命令速查](#附录检测命令速查)
 
 ---
 
@@ -39,6 +40,9 @@
 | to-learn 未触发（被动提及概念） | 步骤 3-4 | F3-3 触发条件 |
 | 产物路径和预期不一致 | 产物后 | 命名约定、重名处理 |
 | 概念笔记"相关"区块无关系说明 | 产物后 | F5-3 模板格式 |
+| MOC 不存在 / 论文条目不同步 | 步骤 6 | F6-* |
+| MOC 状态列与笔记 frontmatter 不一致 | 步骤 6 | F6-* |
+| MOC 待学习表与 to-learn/ 目录不同步 | 步骤 6 | F6-* |
 
 ---
 
@@ -61,24 +65,6 @@ cat .claude/skills/help-me-read/help-me-read.json 2>/dev/null || cat ~/.claude/s
 jq -r '.obsidian_vault' .claude/skills/help-me-read/help-me-read.json 2>/dev/null | xargs ls -d || \
   jq -r '.obsidian_vault' ~/.claude/skills/help-me-read/help-me-read.json | xargs ls -d
 ```
-
-### F0-2：测试配置不可见——agent 始终读写生产配置
-
-**现象**：测试时产物写入生产 vault 而非 `test-output/`；生产配置被测试参数覆盖。
-
-**原因**：SKILL.md 步骤 0 未检测 `test/test-config.json` 的存在，agent 始终操作生产配置。
-
-**修复**：
-1. 确认 SKILL.md 步骤 0 包含"测试模式检测"段落——先检查 `test/test-config.json`，存在则使用测试配置
-2. 测试配置中 vault 指向 `test-output/`，与生产 vault 物理隔离
-3. TESTING.md 测试前准备中确认 agent 读取了测试配置
-
-**检测命令**：
-```bash
-# 确认测试配置文件存在
-cat test/test-config.json
-# 产物应写入 test-output/ 而非生产 vault
-ls test-output/HelpMeRead/
 
 ---
 
@@ -238,15 +224,7 @@ grep -q "📄 论文速览" ../SKILL.md && echo "✅ 已包含" || echo "❌ 缺
 2. 逐题检查：每个信息点是否在核心讲解中有对应段落
 3. 若越界，调整题目内容或补充讲解段落
 
-### F2-3：笔记中缺少核心图片
-
-**现象**：笔记纯文本，没有图嵌入。
-
-**原因**：笔记模板未要求图嵌入，agent 认为笔记不需要图。
-
-**修复**：
-1. 确认 `references/obsidian-note-template.md` 中「方法」和「实验」章节有 `![[assets/figure-N.png]]` 占位
-2. 检查图片嵌入规则：只嵌核心 1-3 张（架构图 + 关键结果图）
+### F2-3：（已修复 ✅ 模板已包含图嵌入）
 
 ### F2-4：概念筛选含噪音
 
@@ -276,29 +254,26 @@ grep -q "📄 论文速览" ../SKILL.md && echo "✅ 已包含" || echo "❌ 缺
 
 **现象**：步骤 5 才生成概念文件，而非步骤 2 并行产出。
 
-**原因**：agent 未遵守 v2.4 的流程重构——概念骨架应在步骤 2 与课程笔记并行生成，步骤 5 只做引导填写。
+**原因**：agent 未遵守流程重构——概念骨架应在步骤 2 与课程笔记并行生成，步骤 5 只做引导填写。
 
 **修复**：
 1. 确认 SKILL.md 步骤 2 包含"概念生成"子步骤
 2. 步骤 5 检查 `concepts/` 下骨架是否已存在
 
-### F2-7：🟡 全管线跨论文污染（潜在风险）
+### F2-7：跨论文污染（✅ 已验证修复——v2.7+ 步骤 2 已硬边界隔离）
 
-**严重级别**：🟡 潜在风险（尚未被 agent 实际触发，但示例设计存在诱发条件）。
+**历史背景**：人工迁移目录时误将 Attention Is All You Need 全套产物与 Logic Reward 产物一起移动，非 agent 生成行为。但暴露了示例设计的风险敞口。
 
-**实际案例**：人工迁移目录时误将 Attention Is All You Need 全套产物与 Logic Reward 产物一起移动，非 agent 生成行为。但暴露了示例设计的风险敞口。
+**旧现象**：处理论文 A 时，agent 为论文 B（`examples/` 中的示例论文）生成全套产物（课程 + 笔记 + 概念）。触发条件：当前论文与示例论文有术语重叠（如都涉及 "attention"）。
 
-**潜在现象**：处理论文 A 时，agent 为论文 B（`examples/` 中的示例论文）生成全套产物（课程 + 笔记 + 概念）。触发条件：当前论文与示例论文有术语重叠（如都涉及 "attention"）。
-
-**原因**：
+**旧原因**：
 1. **上下文污染**：repo 中 `examples/` 目录的完整示例可能被 agent 误认为应一并生成的产物
 2. **缺少硬边界**：步骤 2 没有约束"只为当前这篇论文生成"
 3. **术语关联**：论文中的术语与示例论文的术语重叠时，可能触发联想扩展
 
-**修复**：
-1. **前置隔离**：步骤 2 启动时明确告知 agent "`examples/` 是历史示例，勿参考勿扩展；只处理论文 X"
-2. 或更轻量：SKILL.md 步骤 2 加一句 `examples/ 目录中的文件是示例，严禁在生成新论文产物时将其作为候选或模板复制`
-3. **原文归属硬约束**（长线）：每个产物必须引用当前论文原文的具体段落作为"存在证明"
+**已应用的修复**（v2.7+）：
+- SKILL.md 步骤 2 已加入 `examples/ 目录中的文件是示例，严禁在生成新论文产物时将其作为候选或模板复制`
+- 每个产物要求引用当前论文原文的段落作为"存在证明"
 
 **检测命令**：
 ```bash
@@ -576,38 +551,135 @@ for f in glob.glob('test-output/HelpMeRead/concepts/*.md'):
 
 ---
 
+## 步骤 6：MOC 生命周期
+
+### F6-1：MOC 文件不存在
+
+**现象**：`HelpMeRead MOC.md` 在 vault 的 `HelpMeRead/` 目录下不存在，或 `type: moc` frontmatter 缺失。
+
+**原因**：步骤 2（首篇论文生成）时 MOC 创建逻辑未执行，或用户手动删除了文件。
+
+**修复**：
+1. 执行 `bash scripts/verify.sh` 检查 MOC 存在性
+2. 若缺失，按 `references/moc-guidelines.md` 中的内容结构重新创建并填入已有论文
+
+**检测命令**：
+```bash
+# 检查 MOC 文件存在且 frontmatter 正确
+head -5 test-output/HelpMeRead/HelpMeRead\ MOC.md 2>/dev/null | grep -c "type: moc"
+```
+
+> 关联 issue：⑫
+
+### F6-2：MOC 论文条数与实际不匹配
+
+**现象**：MOC「按状态」表的行数 ≠ `papers/` 下 `HMR-*.md` 的数量（多出或缺少）。
+
+**原因**（按概率排序）：
+1. 新论文笔记生成后 MOC 未同步（SKILL.md 补丁① 未执行）
+2. 用户手动删除了论文目录但未同步 MOC
+3. MOC 中有用户添加的非论文行
+
+**修复**：
+1. 确认 SKILL.md 步骤 2 末尾的 MOC 同步指令已执行
+2. 扫描 MOC 中所有 `[[HMR-` 链接，逐一验证对应的笔记文件存在
+3. 缺少的行手动补上，多余的行标记为可疑
+
+**检测命令**：
+```bash
+# 比较 MOC 论文引用数与 papers/ 下的实际论文数
+python3 -c "
+import os, re
+moc = open('test-output/HelpMeRead/HelpMeRead MOC.md').read()
+moc_papers = set(re.findall(r'\[\[(HMR-[^\]|]+)', moc))
+actual_papers = set()
+for f in os.listdir('test-output/HelpMeRead/papers/'):
+    if os.path.isdir(f'test-output/HelpMeRead/papers/{f}'):
+        actual_papers.add(f'HMR-{f}')
+missing = actual_papers - moc_papers
+extra = moc_papers - actual_papers
+print(f'MOC 中论文数: {len(moc_papers)}')
+print(f'实际论文数: {len(actual_papers)}')
+if missing: print(f'MOC 缺少: {missing}')
+if extra: print(f'MOC 多余: {extra}')
+"
+```
+
+### F6-3：MOC 状态列与笔记 frontmatter 不同步
+
+**现象**：MOC「按状态」表中某论文的 `status` 列与其笔记 frontmatter 中的 `status` 字段不一致。
+
+**原因**：步骤 4（学习完成）或步骤 5（原子笔记拆完）更新笔记 frontmatter 后，未同步更新 MOC 状态列。
+
+**修复**：
+1. 确认 SKILL.md 步骤 4/5 末尾的 MOC 同步指令已执行
+2. 逐行检查 MOC 状态列与对应笔记的 frontmatter
+
+**检测命令**：
+```bash
+# 逐篇对比 MOC 状态与笔记 frontmatter
+python3 -c "
+import os, re
+moc = open('test-output/HelpMeRead/HelpMeRead MOC.md').read()
+table = re.search(r'## 按状态\n\|.*?\n(\|.*\n)+', moc)
+if not table: exit()
+papers_dir = 'test-output/HelpMeRead/papers'
+for line in table.group().split('\n'):
+    m = re.match(r'\|\s*\[\[(HMR-[^\]]+)\]\].*?\|.*?\| (\w+) \|', line)
+    if m:
+        slug = m.group(1).replace('HMR-', '')
+        expected = m.group(2)
+        note_path = f'{papers_dir}/{slug}/HMR-{slug}.md'
+        if os.path.exists(note_path):
+            note = open(note_path).read()
+            actual = re.search(r'status: (\w+)', note)
+            if actual and actual.group(1) != expected:
+                print(f'MISMATCH: {slug} MOC={expected} frontmatter={actual.group(1)}')
+"
+```
+
+### F6-4：MOC 待学习表与 to-learn/ 目录不同步
+
+**现象**：MOC「待学习」表中的条目与 `to-learn/` 目录下的文件不匹配（缺少行、多余行、状态不一致）。
+
+**原因**（按概率排序）：
+1. to‑learn 笔记自动存入后 MOC 同步未执行（SKILL.md 补丁④ 未执行）
+2. to‑learn 笔记毕业后 MOC 状态未同步
+3. 用户手动清除了 `to-learn/` 目录但未更新 MOC
+
+**修复**：
+1. 确认待学习机制中 MOC 同步指令已执行
+2. 扫描 `to-learn/` 目录，将 open/exploring 的条目逐一与 MOC 待学习表对比
+
+**检测命令**：
+```bash
+# 对比 MOC 待学习表与 to-learn/ 目录
+python3 -c "
+import os, re
+moc = open('test-output/HelpMeRead/HelpMeRead MOC.md').read()
+table = re.search(r'## 待学习\n\|.*?\n(\|.*\n)+', moc)
+moc_items = set()
+if table:
+    for line in table.group().split('\n'):
+        m = re.match(r'\|\s*\[\[([^\]]+)\]\]', line)
+        if m:
+            moc_items.add(m.group(1))
+to_learn_dir = 'test-output/HelpMeRead/to-learn'
+actual_items = set()
+if os.path.isdir(to_learn_dir):
+    for f in os.listdir(to_learn_dir):
+        if f.endswith('.md'):
+            actual_items.add(f.replace('.md', ''))
+missing = actual_items - moc_items
+extra = moc_items - actual_items
+if missing: print(f'MOC 待学习表缺少: {missing}')
+if extra: print(f'MOC 待学习表多余: {extra}')
+if not missing and not extra: print('MOC 待学习表与 to-learn/ 目录一致')
+"
+```
+
+---
+
 ## 附录：检测命令速查
 
-```bash
-# === 环境 ===
-# 配置文件存在？路径按 SKILL.md 步骤 0 动态确定
-cat .claude/skills/help-me-read/help-me-read.json 2>/dev/null || cat ~/.claude/skills/help-me-read/help-me-read.json
-
-# PyMuPDF 可用？
-pip list 2>/dev/null | grep PyMuPDF
-
-# poppler-utils 可用？
-which pdfimages 2>/dev/null
-
-# 网络可达？
-curl -sI "https://arxiv.org/abs/XXXX.XXXXX" | head -5
-
-# === 产物 ===
-# 图片提取结果
-ls -la outputs/HelpMeRead/papers/*/course/assets/
-
-# 图片是否有噪音（< 100px）
-identify outputs/HelpMeRead/papers/*/course/assets/*.png | awk '{print $3}' | grep -E '^[0-9]+x'
-
-# 课程文件结构
-ls outputs/HelpMeRead/papers/*/course/*.md
-
-# 导航完整性
-grep -l "←.*→" outputs/HelpMeRead/papers/*/course/*.md | wc -l
-
-# 概念筛选（检查噪音）
-cat outputs/HelpMeRead/concepts/*.md | grep "^title:" | sort
-
-# frontmatter 完整性
-head -15 outputs/HelpMeRead/papers/*/HMR-*.md | grep -E "^(title|type|status|tags):" | sort
-```
+已拆出到 `references/diagnostics-cheatsheet.md`（按需读取）。

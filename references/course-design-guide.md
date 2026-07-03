@@ -19,10 +19,7 @@
 
 ### 文件与目录
 
-- 所有课程进 `papers/<文献简称>/course/`
-- 文件命名 `01-<概念英文名>.md`、`02-<概念英文名>.md`……
-- 图资源进 `papers/<文献简称>/course/assets/`
-- 每节自包含（双链和图片相对路径都基于 vault 根）
+目录和文件命名遵循 `references/frontmatter-schema.md` 中的命名约定。
 
 ### 节角色（Core / Supporting）
 

@@ -11,27 +11,17 @@ tags:
 ## 按状态
 
 | 论文 | 类型 | 状态 | 领域 |
-|---|---|---|---|---|
-| [[HMR-attention-is-all-you-need]] | research | learning | attention |
+|---|---|---|---|
+| [[HMR-attention-is-all-you-need]] | research | learned | attention |
+| [[HMR-lllms-survey]] | survey | learning | llm |
+| [[HMR-bert]] | research | atomized | nlp |
 
-## 按领域
+<!-- 按领域、按类型等聚合视图由 Obsidian Bases 基于 frontmatter 动态生成 -->
 
-| 领域 | 论文数 |
-|---|---|
-| attention | 1 |
-| sequence-modeling | 1 |
-| machine-translation | 1 |
-
-## 按类型
-
-| 类型 | 论文数 |
-|---|---|
-| research | 1 |
-| survey | 0 |
-| dataset | 0 |
-
-## 待学习（open）
+## 待学习
 
 | 概念 | 出自 | 状态 |
 |---|---|---|
-| [[positional-encoding]] | [[HMR-attention-is-all-you-need]] | open |
+| [[positional-encoding]] | [[HMR-attention-is-all-you-need]] | resolved |
+| [[RLHF]] | [[HMR-lllms-survey]] | exploring |
+| [[LoRA]] | [[HMR-lllms-survey]] | open |

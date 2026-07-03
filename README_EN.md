@@ -1,4 +1,4 @@
-# 📚 Help Me Read
+# 📚 Help Me Read v3.0
 
 > [中文版（完整版）](README.md)
 >
@@ -6,9 +6,7 @@
 
 Turn academic papers into **learnable courses** and a **searchable knowledge base** in your Obsidian vault.
 
-> 💡 **Requires [Obsidian](https://obsidian.md/) ≥ 1.x** (uses callouts, Bases, MathJax, wikilinks).
->
-> 💡 **Recommended**: Install the [Claudian plugin](https://github.com/YishenTu/claudian) to run the full workflow inside Obsidian.
+> 💡 **Best platform: Claude Code** (`claude.ai/code` or CLI). The core pipeline (concept-mapper → course-generator + note-writer) uses Claude Code's subagent API and cannot run on other platforms. See the Chinese README for architecture details.
 
 ## Features
 

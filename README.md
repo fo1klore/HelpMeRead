@@ -1,12 +1,18 @@
-# 📚 Help Me Read
+# 📚 Help Me Read v3.0
 
 > [English version](README_EN.md)
 
-把学术论文变成**可学习的课程**和**可检索的知识库**。一个 agent skill，产物以 Markdown 文件（使用 Obsidian 兼容语法：callout、wikilink、MathJax）存入你的 vault，与你的其他笔记互通。
+把学术论文变成**可学习的课程**和**可检索的知识库**。基于 **Claude Code** 的 agent-skill 架构，通过 subagent 管线将产出以 Markdown 文件（callout、wikilink、MathJax）存入你的 vault。
 
-> 💡 **依赖 [Obsidian](https://obsidian.md/) ≥ 1.x**（使用 callout、Bases、MathJax、双链）。非 Obsidian 编辑器能读取 Markdown 内容，但 callout 折叠和 `[[双链]]` 会降级为普通文本/引用块。
->
-> 💡 **推荐搭配**：在 Obsidian 社区插件中安装 [Claudian 插件](https://github.com/YishenTu/claudian)（[中文安装教程](https://developer.aliyun.com/article/1712715)），将 Help Me Read skill 导入内置 agent。这样你可以在 **Obsidian 单一窗口内**完成「生成课程 → 学习 → 拆解笔记」全流程，无需在终端和 Obsidian 之间来回切换。
+> 💡 **最佳适配平台：Claude Code**（`claude.ai/code` 或 CLI）。核心流程（concept-mapper → course-generator + note-writer）使用 Claude Code 独有的 `Agent(subagent_type=...)` API 调度，无法在其他平台上等价执行。详见「架构与平台适配」节。
+
+---
+
+### 产出预览（Obsidian）
+
+所有产物以 Obsidian 兼容的 Markdown 呈现：callout 折叠、MathJax 公式、`[[双链]]`。非 Obsidian 编辑器可读，但折叠和双链会降级。
+
+> 💡 **推荐搭配**：在 Obsidian 社区插件中安装 [Claudian 插件](https://github.com/YishenTu/claudian)（[中文安装教程](https://developer.aliyun.com/article/1712715)），将 Help Me Read skill 导入内置 agent。这样你可以在 **Obsidian 单一窗口内**完成「生成课程 → 学习 → 拆解笔记」全流程。
 
 ## ✨ 功能
 
@@ -119,15 +125,28 @@
 ```
 HelpMeRead/
 ├── SKILL.md                                     # 技能主干：触发、编排、全流程
+├── .claude/agents/                              # subagent 定义（init-agents.sh 本地生成，不纳入版本控制）
+│   ├── concept-mapper.md                        #   概念映射（术语三分 → JSON 映射表）
+│   ├── course-generator.md                      #   课程生成 + 原子笔记骨架 + 质量检查
+│   └── note-writer.md                           #   Obsidian 笔记 + MOC 同步
 ├── test/
 │   ├── test-config.json                         # 测试配置文件
-│   └── TESTING.md                               # 模块化测试框架
+│   └── TESTING.md                               # 模块化测试框架（T1-T17）
+├── scripts/
+│   ├── preflight.sh                             # 模式检测（test/production）
+│   ├── init-agents.sh                           # subagent 安装脚本
+│   ├── check-deps.sh                            # 图片提取依赖检测
+│   └── verify.sh                                # 一键产物验证
 ├── references/
 │   ├── obsidian-note-template.md                # 五类笔记模板
 │   ├── course-design-guide.md                   # 三类课程设计指南
-│   ├── qa-standards.md                          # 问答标准
-│   ├── frontmatter-schema.md                    # 全字段 frontmatter schema + MOC
+│   ├── frontmatter-schema.md                    # 全字段 frontmatter schema + 命名约定
+│   ├── image-extraction.md                      # 图片提取优先级链
+│   ├── quality-checks.md                        # 生成后完整性检查 10 项
+│   ├── moc-guidelines.md                        # MOC 生命周期与更新规则
+│   ├── qa-standards.md                          # 问答标准与验证标签
 │   ├── failure-modes.md                         # 已知失败模式与排查指南
+│   ├── diagnostics-cheatsheet.md                # 诊断命令速查
 │   └── issue-resolution-workflow.md             # 问题解决标准操作流程
 ├── examples/                                    # 完整样例
 ├── README.md
@@ -140,6 +159,7 @@ HelpMeRead/
 
 | 日期 | 变更 | 📝 开发者寄语 |
 |---|---|---|
+| 2026-07-03 | **v3.0** · 全面 subagent 管线重构：步骤 2 由单块内联流程拆分为 concept-mapper → course-generator + note-writer 三级 subagent 调度；SKILL.md 精简 70%（514→140 行），详细逻辑提取到 references/ 独立文件；新增 init-agents.sh 安装脚本；图片提取/质量检查/MOC 管理各自独立 reference；集中热身模块彻底移除，改正文首次出现即解释；文献速览环节；verify.sh + TESTING.md（T1-T17）全面适配 subagent 架构。**最佳适配平台：Claude Code** | 减脂成功了...吗？ |
 | 2026-07-03 | **v2.7.2** · 概念/术语首次出现解释替代独立热身：三类术语不再设独立热身模块，改在正文首次出现处即附解释（核心概念 `[[]]` + 解释 / 前置术语加粗 + 解释 / 背景术语一句话解释）；新增文献速览环节（步骤 1 类型判定后展示核心贡献/问题-方法-局限/核心概念概览，用户选择继续/总结/只笔记/停止）；course-design-guide.md 同步移除热身模块定义；verify.sh 检查同步；failure-modes.md 新增 F1-7 | 有些事情，我希望你提前知道 |
 | 2026-07-02 | **v2.7.1** · 概念自测新增参考答案展示步骤（④引导修正→⑤展示参考答案→⑥确认填入→⑦回写补充层）；TESTING.md T10 同步更新；failure-modes.md 新增 F4-3 | 我需要知道什么是对的。 |
 | 2026-07-02 | **v2.7** · 课程生成质量大修：术语三分（核心概念/前置术语/背景术语）替代单一块热身；生成时来源标注要求；断言降级制度（[背景]/[推断]）；完整性检查新增来源标注/断言标签/缩写解释检查；verify.sh 和 course-design-guide.md 同步适配 | 他好像不太聪明的样子 |：course-design-guide.md 新增 Core/Supporting 节角色定义（Core ≥ max(ceil(总节数 × 50%), 1））和教学深度最低结构（问题动机→变量准备→分步推导→直觉解释→数值例子→错误直觉）；SKILL.md step 2.6 新增节角色检查和 Core 节深度检查（推导分步/前置桥接/数值示例/错误直觉 4 条验证） | 你怎么这样？ |

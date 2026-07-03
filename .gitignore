@@ -31,3 +31,6 @@ test-output/
 
 # 项目级自动生成的 skill 配置（含 vault 路径等本地信息）
 .claude/skills/
+
+# 本地安装时由 init-agents.sh 生成的 subagent 定义文件
+.claude/agents/

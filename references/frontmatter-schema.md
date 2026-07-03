@@ -185,7 +185,28 @@ tags:
 
 ---
 
-## 配置文件（.claude/skills/help-me-read/help-me-read.json）
+## 七、命名约定（全文唯一来源）
+
+所有产物在 vault 的 `HelpMeRead/` 子目录下：
+
+| 对象 | 规则 | 示例 |
+|---|---|---|
+| **文献简称** | 文献标题转 kebab-case 英文小写，取关键词 ≤6 个词；中文标题取英文翻译或常用英文名 | "Attention Is All You Need" → `attention-is-all-you-need` |
+| **文献总结笔记** | `papers/<文献简称>/HMR-<文献简称>.md`（HMR- 前缀 + 文献标识） | `papers/attention-is-all-you-need/HMR-attention-is-all-you-need.md` |
+| **课程子目录** | `papers/<文献简称>/course/` | `papers/attention-is-all-you-need/course/` |
+| **课程文件** | `<两位序号>-<概念英文名>.md` | `01-why-attention.md` |
+| **课程图资源** | `papers/<文献简称>/course/assets/` | `assets/figure-1.png` |
+| **问答记录** | `papers/<文献简称>/qa-<YYYY-MM-DD>.md` | `papers/attention-is-all-you-need/qa-2026-06-22.md` |
+| **核心概念原子笔记** | `concepts/<概念名>.md`（跨论文共享，去重） | `concepts/self-attention.md` |
+| **待学习笔记** | `to-learn/<概念名>.md`（目录名固定英文） | `to-learn/positional-encoding.md` |
+| **MOC** | `HelpMeRead MOC.md`（固定，vault 的 HelpMeRead/ 根） | `HelpMeRead MOC.md` |
+
+文献简称一旦在某次会话中确定，本次会话内所有路径（课程目录、问答记录）都用同一个，保持一致。
+
+**重名处理**：生成简称后检查 vault 中 `papers/<简称>/` 是否已被占用：
+- 目录不存在 → 直接使用
+- 目录存在且为**同一篇论文**（已有 `HMR-<简称>.md` 的 `title` 相同）→ 提示用户"这篇论文已有产物"，给出选项：① 重新生成（覆盖旧产物，需二次确认）② 保留旧产物，取消本次
+- 目录存在且为**不同论文**（`title` 不同）→ 告知用户冲突，自动追加消歧后缀：先试 `<简称>-<年份>`，仍冲突则追加作者姓（`<简称>-<年份>-<姓>`），全部失败则请用户手动指定简称
 
 SKILL.md 步骤 0 管理。字段：
 
