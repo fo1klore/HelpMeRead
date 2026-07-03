@@ -80,6 +80,24 @@ for course_file in "$TEST_DIR"/papers/*/course/*.md; do
   done < <(grep -n '\\[\\[[^]|]' "$course_file" 2>/dev/null || true)
 done
 echo ""
+echo "--- 可跳过标注位置检查 ---"
+for course_file in "$TEST_DIR"/papers/*/course/*.md; do
+  [ -f "$course_file" ] || continue
+  fname=$(basename "$course_file")
+  skip_line=$(grep -n '\[!skip\]' "$course_file" 2>/dev/null | head -1 | cut -d: -f1)
+  if [ -n "$skip_line" ]; then
+    total=$(wc -l < "$course_file")
+    if [ "$skip_line" -gt $((total / 5)) ]; then
+      red "  ❌ $fname: [!skip] 位于第 $skip_line/${total} 行（应在前 20%）"
+      ERRORS=$((ERRORS + 1))
+    else
+      green "  ✅ $fname: [!skip] 位于第 $skip_line/${total} 行 ✅"
+    fi
+  else
+    echo "  ℹ️ $fname 无 [!skip] 标注（此项非强制）"
+  fi
+done
+echo ""
 echo "--- 来源标注检查 ---"
 for course_file in "$TEST_DIR"/papers/*/course/*.md; do
   [ -f "$course_file" ] || continue
