@@ -61,22 +61,31 @@ for img in "$TEST_DIR"/papers/*/course/assets/*.png "$TEST_DIR"/papers/*/course/
   fi
 done
 echo ""
-echo "--- 概念热身检查 ---"
+echo "--- 旧版热身残留检查 ---"
 for course_file in "$TEST_DIR"/papers/*/course/*.md; do
   [ -f "$course_file" ] || continue
   fname=$(basename "$course_file")
-  check "$fname 包含核心概念热身callout" "grep -q '🏋️.*核心概念' '$course_file'"
-  check "$fname 包含前置术语热身callout" "grep -q '🧭.*前置术语' '$course_file'"
+  # 确保无旧版集中式热身（🏋️/🧭 callout）残留
+  check "$fname 无旧版集中热身残留" "! grep -q '🏋️\|🧭' '$course_file'"
 done
 echo ""
-echo "--- 概念双链解释检查 ---"
+echo "--- 概念首次出现解释检查 ---"
 for course_file in "$TEST_DIR"/papers/*/course/*.md; do
   [ -f "$course_file" ] || continue
   fname=$(basename "$course_file")
-  first_link=$(grep -n '\\[\\[' "$course_file" 2>/dev/null | head -1 | cut -d: -f1)
-  if [ -n "$first_link" ] && [ "$first_link" -gt 1 ]; then
-    check "$fname 概念首次出现前有预热解释" "head -\$((first_link - 1)) '$course_file' | grep -q '核心概念\|前置术语\|通俗解释\|一句话'"
-  fi
+  # 每个 [[概念名]] 所在行或其相邻行应有解释内容（括号、判断句等）
+  while IFS=':' read -r line_num _; do
+    [ -z "$line_num" ] && continue
+    context=$(sed -n "${line_num}p" "$course_file")
+    next_line=$(sed -n "$((line_num + 1))p" "$course_file")
+    combined="$context $next_line"
+    if echo "$combined" | grep -qE '（[^）]{3,}）|是[一一种]|[：:].{5,}|通俗|即[，,]|means|refers to|是一种'; then
+      :  # 有解释内容
+    else
+      red "  ❌ $fname:${line_num} [[概念]] 附近缺少解释"
+      ERRORS=$((ERRORS + 1))
+    fi
+  done < <(grep -n '\\[\\[[^]|]' "$course_file" 2>/dev/null || true)
 done
 echo ""
 echo "--- 来源标注检查 ---"
