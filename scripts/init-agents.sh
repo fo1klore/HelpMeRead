@@ -1,21 +1,49 @@
 #!/bin/bash
-# scripts/init-agents.sh — Help Me Read subagent 初始化
+# scripts/init-agents.sh — Help Me Read subagent 部署脚本
 #
-# 安装时在本地创建 subagent 定义文件。不修改或删除 .claude/agents/ 中已有的其他文件。
-# 用法: bash scripts/init-agents.sh
+# 将 subagent 定义文件部署到目标工作目录。
+# 不在项目工程目录内创建任何 subagent 文件。
+# 用法: bash scripts/init-agents.sh <目标目录>
+#
+# 示例: bash scripts/init-agents.sh /Users/liyi/ObsidianVault/HelpMeRead
+#       部署后在 SKILL.md 头部将 agent 更新标志设为 1
 
 set -e
 
+if [ $# -lt 1 ]; then
+    echo "用法: bash scripts/init-agents.sh <目标目录>"
+    echo "示例: bash scripts/init-agents.sh /path/to/vault/HelpMeRead"
+    echo ""
+    echo "将 subagent 定义文件部署到 <目标目录>/.claude/agents/"
+    exit 1
+fi
+
+TARGET_DIR="$1"
+AGENTS_DIR="$TARGET_DIR/.claude/agents"
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-AGENTS_DIR="$PROJECT_ROOT/.claude/agents"
 mkdir -p "$AGENTS_DIR"
 
+# ── write_agent( file, name, tmpfile ) ──
+# 将临时文件写入目标，内容一致则跳过。
+write_agent() {
+    local file="$1" name="$2" tmpfile="$3"
+    if [ ! -f "$file" ]; then
+        cp "$tmpfile" "$file"
+        echo "  ✨ $name — 新建"
+    elif diff -q "$file" "$tmpfile" >/dev/null 2>&1; then
+        echo "  ✅ $name — 一致"
+        rm "$tmpfile"
+        return 0
+    else
+        echo "  ⚠️  $name — 已更新"
+        cp "$tmpfile" "$file"
+    fi
+    rm "$tmpfile"
+}
+
 # ────────── concept-mapper ──────────
-# 职责: 通读原文 → 术语三分(核心/前置/背景) → 构建概念映射表(JSON 输出)
-# 输入: 论文原文, 论文类型, 文献简称 slug, vault 路径
-# 输出: JSON 格式概念映射表(最终输出文本)
-# 引用: references/frontmatter-schema.md, references/course-design-guide.md
-cat > "$AGENTS_DIR/concept-mapper.md" << 'AGENT_EOF'
+tmp=$(mktemp)
+cat > "$tmp" << 'AGENT_EOF'
 ---
 name: concept-mapper
 description: "分析论文原文，识别术语并三分（核心/前置/背景），构建概念映射表"
@@ -71,14 +99,11 @@ tools:
 
 **不要写入磁盘**。全部产出为最终输出的 JSON。
 AGENT_EOF
+write_agent "$AGENTS_DIR/concept-mapper.md" "concept-mapper" "$tmp"
 
 # ────────── course-generator ──────────
-# 职责: 课程内容全量生成 + 原子笔记骨架 + 生成后 10 项完整性检查
-# 输入: 论文原文, 论文类型, slug, vault, 概念映射表
-# 输出: 课程文件写入 vault, 原子笔记骨架写入 vault, 质量检查报告
-# 引用: references/course-design-guide.md, references/quality-checks.md,
-#       references/obsidian-note-template.md, references/frontmatter-schema.md
-cat > "$AGENTS_DIR/course-generator.md" << 'AGENT_EOF'
+tmp=$(mktemp)
+cat > "$tmp" << 'AGENT_EOF'
 ---
 name: course-generator
 description: "生成课程内容和原子笔记骨架，执行生成后完整性检查"
@@ -111,7 +136,7 @@ tools:
 ### B. 生成课程
 1. 按学习路径重组为 N 节（3-5 节，综述 6-8，超 7 需说明理由）
 2. 文件 `01-<topic>.md`、`02-<topic>.md` ...
-3. 每节结构：课程地图(折叠) → 可跳过条件 → 核心讲解+类比 → 自测(`>[!quiz]`) → 小结+预告 → 底部导航
+3. 每节结构：可跳过条件 → 核心讲解+类比 → 自测(`>[!quiz]`) → 小结+预告 → 底部导航
 4. 术语处理：核心概念→`[[filename_slug|原名]]`+解释；前置术语→加粗+解释；背景术语→一句话解释
 5. 读者画像默认零基础，首次出现解释不可省略
 6. 来源标注 `📖 [章节号]`，非原文标注`[背景]`/`[推断]`
@@ -128,14 +153,11 @@ tools:
 ### D. 质量检查（必做）
 按 `references/quality-checks.md` 的 10 项逐条执行。任意失败→修正重试，上限 2 次。最终报告成功/失败详情。
 AGENT_EOF
+write_agent "$AGENTS_DIR/course-generator.md" "course-generator" "$tmp"
 
 # ────────── note-writer ──────────
-# 职责: 一次性生成 Obsidian 笔记 + 同步 MOC
-# 输入: 论文原文, 论文类型, slug, vault, 概念映射表
-# 输出: HMR-<slug>.md + MOC 更新
-# 引用: references/obsidian-note-template.md, references/frontmatter-schema.md,
-#       references/moc-guidelines.md, references/qa-standards.md
-cat > "$AGENTS_DIR/note-writer.md" << 'AGENT_EOF'
+tmp=$(mktemp)
+cat > "$tmp" << 'AGENT_EOF'
 ---
 name: note-writer
 description: "生成 Obsidian 结构化笔记并同步 MOC"
@@ -177,3 +199,16 @@ tools:
 检查 `HelpMeRead MOC.md`：
 - 不存在 → 创建（frontmatter: type:moc, tags:[moc]），含「按状态」表和「待学习」表
 - 已存在 → 在「按状态」表追加当前论文行
+AGENT_EOF
+write_agent "$AGENTS_DIR/note-writer.md" "note-writer" "$tmp"
+
+# ── 更新 SKILL.md agent 更新标志 ──
+SKILL_FILE="$PROJECT_ROOT/SKILL.md"
+if grep -q 'agent更新标志：0' "$SKILL_FILE" 2>/dev/null; then
+    sed -i '' 's/agent更新标志：0/agent更新标志：1/' "$SKILL_FILE"
+    echo ""
+    echo "🔖 SKILL.md agent 更新标志 → 1"
+fi
+
+echo "---"
+echo "部署完成。"

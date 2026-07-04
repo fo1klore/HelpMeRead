@@ -1,4 +1,4 @@
-# 📚 Help Me Read v3.1
+# 📚 Help Me Read v3.1.1
 
 > [English version](README_EN.md)
 
@@ -159,6 +159,7 @@ HelpMeRead/
 
 | 日期 | 变更 | 📝 开发者寄语 |
 |---|---|---|
+| 2026-07-04 | **v3.1.1** · 删除课程地图+概念索引；模块模板化（5 填空模板）；init-agents.sh 部署化（目标目录参数 + flag 自动更新）；SKILL.md agent 更新门禁；清理项目内 subagent 生成物 | 加点骨架和新陈代谢 |
 | 2026-07-03 | **v3.1** · 可跳过标注位置约束强化（course-design-guide 模板 + verify.sh 检测）；概念自测纠错流程 UX 大修——线性七步改为分支流程、去步骤编号、反查课程静默完成、拆解问题条件触发；course-design-guide 单课模块顺序修正（地图/可跳过纳入完整 0-10 顺序）；逐概念教学循环替代批处理模块 4 | 一些被脂肪淹没的小毛病 |
 | 2026-07-03 | **v3.0** · 全面 subagent 管线重构：步骤 2 由单块内联流程拆分为 concept-mapper → course-generator + note-writer 三级 subagent 调度；SKILL.md 精简 70%（514→140 行），详细逻辑提取到 references/ 独立文件；新增 init-agents.sh 安装脚本；图片提取/质量检查/MOC 管理各自独立 reference；集中热身模块彻底移除，改正文首次出现即解释；文献速览环节；verify.sh + TESTING.md（T1-T17）全面适配 subagent 架构。**最佳适配平台：Claude Code** | 减脂成功了...吗？ |
 | 2026-07-03 | **v2.7.2** · 概念/术语首次出现解释替代独立热身：三类术语不再设独立热身模块，改在正文首次出现处即附解释（核心概念 `[[]]` + 解释 / 前置术语加粗 + 解释 / 背景术语一句话解释）；新增文献速览环节（步骤 1 类型判定后展示核心贡献/问题-方法-局限/核心概念概览，用户选择继续/总结/只笔记/停止）；course-design-guide.md 同步移除热身模块定义；verify.sh 检查同步；failure-modes.md 新增 F1-7 | 有些事情，我希望你提前知道 |
