@@ -1,4 +1,4 @@
-# 📚 Help Me Read v3.1
+# 📚 Help Me Read
 
 > [中文版（完整版）](README.md)
 >

@@ -98,6 +98,53 @@ for course_file in "$TEST_DIR"/papers/*/course/*.md; do
   fi
 done
 echo ""
+echo "--- 表格竖杠一致性检查 ---"
+for course_file in "$TEST_DIR"/papers/*/course/*.md; do
+  [ -f "$course_file" ] || continue
+  fname=$(basename "$course_file")
+  awk -v fname="$fname" '
+    BEGIN { in_table=0; ref_count=0; errors=0; }
+    /^\|/ {
+      in_table++;
+      count=gsub(/\|/, "|");
+      if (in_table == 2) ref_count=count;
+      if (in_table >= 3 && count != ref_count) {
+        printf "  ❌ %s:%d 竖杠数 %d ≠ 预期 %d（可能含未转义字面 |）\n", fname, NR, count, ref_count > "/dev/stderr"
+        errors++;
+      }
+      next;
+    }
+    { in_table=0; }
+    END { exit errors ? 1 : 0; }
+  ' "$course_file" 2>&1 1>/dev/null && green "  ✅ $fname 表格竖杠数一致" || red "  ❌ $fname 表格中有未转义竖杠"
+done
+echo ""
+echo "--- 公式 MathJax 覆盖检查 ---"
+for course_file in "$TEST_DIR"/papers/*/course/*.md; do
+  [ -f "$course_file" ] || continue
+  fname=$(basename "$course_file")
+  issues=$(awk '
+    BEGIN { in_code=0; }
+    /^```/ { in_code=!in_code; next; }
+    in_code { next; }
+    /^\$/ { next; }
+    {
+      line=$0;
+      gsub(/\$[^$]*\$/, "", line);
+      if (line ~ /[μσ∑αβγθλπ∈∉⊂⊆∩∪∀∃⊥∇∂≈∼≠≡≤≥∞]/) {
+        printf "%s:%d: %s\n", FILENAME, NR, $0 > "/dev/stderr"
+      }
+    }
+  ' "$course_file" 2>&1 >/dev/null || true)
+  if [ -n "$issues" ]; then
+    count=$(echo "$issues" | wc -l)
+    red "  ❌ $fname: $count 处数学符号未被 \$ 包裹"
+    ERRORS=$((ERRORS + 1))
+  else
+    green "  ✅ $fname 数学符号均已 MathJax 包裹"
+  fi
+done
+echo ""
 echo "--- 来源标注检查 ---"
 for course_file in "$TEST_DIR"/papers/*/course/*.md; do
   [ -f "$course_file" ] || continue

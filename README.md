@@ -1,4 +1,4 @@
-# 📚 Help Me Read v3.1.1
+# 📚 Help Me Read v3.1.2
 
 > [English version](README_EN.md)
 
@@ -159,6 +159,7 @@ HelpMeRead/
 
 | 日期 | 变更 | 📝 开发者寄语 |
 |---|---|---|
+| 2026-07-04 | **v3.1.2** · 自然语言触发路由显式化（triggers 字段 + 触发短语列表）；步骤 4 自动打开（去"代为"歧义）；表格竖杠转义约束 + verify.sh 检测；全课程 MathJax 统一约束 + verify.sh 检测；反引号包裹 wikilink 修复（init-agents.sh + course-design-guide 4 处）；步骤 5 参考答案自动填入 + 自动推进 | 增肌 |
 | 2026-07-04 | **v3.1.1** · 删除课程地图+概念索引；模块模板化（5 填空模板）；init-agents.sh 部署化（目标目录参数 + flag 自动更新）；SKILL.md agent 更新门禁；清理项目内 subagent 生成物 | 加点骨架和新陈代谢 |
 | 2026-07-03 | **v3.1** · 可跳过标注位置约束强化（course-design-guide 模板 + verify.sh 检测）；概念自测纠错流程 UX 大修——线性七步改为分支流程、去步骤编号、反查课程静默完成、拆解问题条件触发；course-design-guide 单课模块顺序修正（地图/可跳过纳入完整 0-10 顺序）；逐概念教学循环替代批处理模块 4 | 一些被脂肪淹没的小毛病 |
 | 2026-07-03 | **v3.0** · 全面 subagent 管线重构：步骤 2 由单块内联流程拆分为 concept-mapper → course-generator + note-writer 三级 subagent 调度；SKILL.md 精简 70%（514→140 行），详细逻辑提取到 references/ 独立文件；新增 init-agents.sh 安装脚本；图片提取/质量检查/MOC 管理各自独立 reference；集中热身模块彻底移除，改正文首次出现即解释；文献速览环节；verify.sh + TESTING.md（T1-T17）全面适配 subagent 架构。**最佳适配平台：Claude Code** | 减脂成功了...吗？ |
