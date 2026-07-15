@@ -63,10 +63,10 @@
 
 **检测命令**：
 ```bash
-# 生产配置路径按 SKILL.md 步骤 0 动态确定（优先项目 .claude/，否则 ~/.claude/）
-cat .claude/skills/help-me-read/help-me-read.json 2>/dev/null || cat ~/.claude/skills/help-me-read/help-me-read.json
-jq -r '.obsidian_vault' .claude/skills/help-me-read/help-me-read.json 2>/dev/null | xargs ls -d || \
-  jq -r '.obsidian_vault' ~/.claude/skills/help-me-read/help-me-read.json | xargs ls -d
+# 生产配置路径由 preflight.sh 输出驱动（绝对路径，不依赖 CWD）
+CONFIG_PATH=$(bash scripts/preflight.sh 2>/dev/null | grep '^CONFIG_PATH=' | cut -d= -f2)
+cat "$CONFIG_PATH" 2>/dev/null
+jq -r '.obsidian_vault' "$CONFIG_PATH" 2>/dev/null | xargs ls -d
 ```
 
 ---

@@ -6,8 +6,9 @@
 
 ```bash
 # === 环境 ===
-# 配置文件存在？路径按 SKILL.md 步骤 0 动态确定
-cat .claude/skills/help-me-read/help-me-read.json 2>/dev/null || cat ~/.claude/skills/help-me-read/help-me-read.json
+# 配置文件存在？由 preflight.sh 输出驱动（绝对路径，不依赖 CWD）
+CONFIG_PATH=$(bash scripts/preflight.sh 2>/dev/null | grep '^CONFIG_PATH=' | cut -d= -f2)
+cat "$CONFIG_PATH" 2>/dev/null
 
 # PyMuPDF 可用？
 pip list 2>/dev/null | grep PyMuPDF
