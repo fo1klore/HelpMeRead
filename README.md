@@ -1,4 +1,4 @@
-# 📚 Help Me Read v3.1.2
+# 📚 Help Me Read v3.2
 
 > [English version](README_EN.md)
 
