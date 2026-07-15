@@ -21,7 +21,6 @@ HelpMeRead/
 │   └── HelpMeRead/
 │       ├── papers/
 │       ├── concepts/
-│       ├── to-learn/
 │       └── HelpMeRead MOC.md
 ├── .claude/agents/             # subagent 定义（由 init-agents.sh 生成）
 │   ├── concept-mapper.md
@@ -38,7 +37,6 @@ HelpMeRead/
 {
   "obsidian_vault": "<项目绝对路径>/test-output",
   "qa_record": false,
-  "to_learn": true,
   "external_concepts_dirs": []
 }
 ```
@@ -59,7 +57,6 @@ HelpMeRead/
 | 改图片提取管线 | T3 图片提取 |
 | 改问答标准 | T11 问答 |
 | 改步骤 5 引导逻辑 | T10 步骤 5 引导 |
-| 改待学习机制 | T13 待学习功能 |
 | 改首次运行引导 | T1 环境检查 + preflight.sh 检查 |
 | 改跨论文去重或联系 | T12 跨论文功能 |
 | 改 MOC 生命周期/同步机制 | T15 MOC 生命周期 |
@@ -717,7 +714,6 @@ T7 示例嵌入报告
 | 原始来源 | `papers/<简称>/_source.md` |
 | 问答记录 | `papers/<简称>/qa-<YYYY-MM-DD>.md` |
 | 原子笔记 | `concepts/<概念名>.md` |
-| 待学习笔记 | `to-learn/<概念名>.md` |
 | MOC | `HelpMeRead MOC.md` |
 
 检查各产物 frontmatter 必填字段（按 `references/frontmatter-schema.md` 定义）：
@@ -727,7 +723,6 @@ T7 示例嵌入报告
 | 文献总结笔记 | title / aliases / authors / year / venue / area / type / source / status / read_date / sections / tags / up / related |
 | 课程文件 | title / course / section / prev / next |
 | 原子笔记 | title / aliases / type:concept / area / defined_in / up / tags |
-| 待学习笔记 | title / type:to-learn / from / raised_date / status / tags |
 | MOC | type:moc / tags |
 
 ### 判定
@@ -740,7 +735,6 @@ T8 产物结构报告
 [通过/失败] 笔记路径合规
 [通过/失败] 课程文件路径合规（两位序号 + 概念英文名）
 [通过/失败] 原子笔记路径合规
-[通过/失败] 待学习笔记路径合规
 [通过/失败] _source.md 路径合规（papers/<slug>/_source.md）
 
 frontmatter
@@ -769,7 +763,7 @@ frontmatter
 | 2A | concept-mapper subagent 调用 | 调用了 `Agent(subagent_type="concept-mapper")`，输出 JSON 概念映射表，映射表冻结作为后续命名源 |
 | 2B | course-generator + note-writer 并行启动 | 两者同时生成，任一先完成不阻塞另一个。课程生成完整（N 节），笔记生成完整（HMR-<slug>.md），MOC 同步完成 |
 | 2B | subagent 容错 | course-generator 失败不影响 note-writer（反之亦然）。concept-mapper 失败阻止 Step 2 继续 |
-| 3 | 列大纲 + 提醒待学习 | 显示 N 节标题（含可跳过条件）+ 待学习提示 |
+| 3 | 列大纲 | 显示 N 节标题（含可跳过条件） |
 | 4 | 打开第一节（Obsidian URI）+ 底部导航可用 | URI 语法正确，导航链接完整，首节左侧 `← 无`、末节右侧 `课程结束` |
 | 5 | 概念骨架已就绪 → agent 能开始引导 | 能列出概念列表并开始第一个纠错引导 |
 
@@ -784,7 +778,7 @@ T9 全流程衔接报告
 [通过/失败] 步骤 2A concept-mapper 映射表输出（合法 JSON）
 [通过/失败] 步骤 2B 并行启动（课程生成 + 笔记生成 + MOC 同步）
 [通过/失败] 步骤 2B subagent 容错（一个失败不影响另一个）
-[通过/失败] 步骤 3 大纲展示 + 待学习提醒
+[通过/失败] 步骤 3 大纲展示
 [通过/失败] 步骤 4 文件 URI 语法 + 导航链接
 [通过/失败] 步骤 5 引导启动成功（概念列表可列）
 
@@ -914,39 +908,6 @@ T12 跨论文功能报告
 
 ---
 
-## T13：待学习功能
-
-**目标**：验证待学习机制的存入、生命周期和毕业流程。
-
-### 步骤
-
-1. **触发场景 1（显式提问）**：在课程学习中，问一个论文中未解释的概念（如"什么是 Layer Normalization？"）
-2. **触发场景 2（被动提及，验证 v2.5 ⑰ 修复）**：用户说"我不懂 Layer Normalization"或"Layer Normalization 这个概念我不熟悉"——agent 应识别信号词并触发
-3. **触发场景 3（纯名称提及，验证 v2.6 ㉓ 增强）**：用户只输入概念名"Layer Normalization"（无其他字符，移除标点后 ≤ 30 字符，无完整句子结构）——agent 也应触发
-4. 检查 agent 是否首先给了一句话解释
-5. 检查 `to-learn/` 下是否自动生成了对应笔记（不需要用户确认）
-6. 检查 to-learn 笔记 frontmatter：`status: open`，`from` 指向当前论文
-7. 后续选择"搜索资料"，检查 `status → exploring`
-8. 后续选择"搞懂了"（毕业），检查 `status → resolved`，`resolved_to` 指向 `concepts/` 下文件
-
-### 判定
-
-```
-T13 待学习功能报告
-
-触发场景 1（显式提问"什么是 X"）：[触发 / 未触发]
-触发场景 2（被动提及"我不懂 X"）：[触发 / 未触发]
-触发场景 3（纯名称"X"）：[触发 / 未触发]
-
-[通过/失败] 触发后先给一句话解释
-[通过/失败] to-learn 笔记自动生成（未询问）
-[通过/失败] frontmatter 正确（status: open, from 指向论文）
-[通过/失败] 搜索后 status → exploring
-[通过/失败] 毕业后 status → resolved, resolved_to 有值
-
-备注：________________________________
-```
-
 ---
 
 ## T14：临时文件清理（验证 ⑱ / F1-5 修复）
@@ -1003,8 +964,6 @@ T14 临时文件清理报告（关联 ⑱ / F1-5）
 2. 检查 `HelpMeRead MOC.md` 是否存在，frontmatter 包含 `type: moc` 和 `tags: [moc]`，「按状态」表包含该论文一行
 3. 走完步骤 4（模拟用户告知"学完了"），检查 MOC 状态列 `learning` → `learned`
 4. 走完步骤 5（模拟原子笔记全部拆完），检查 MOC 状态列 `learned` → `atomized`
-5. 触发 to‑learn 机制（说"我不懂 Layer Normalization"），检查 MOC 待学习表追加了对应行
-6. 模拟 to‑learn 毕业（用户说"搞懂了"），检查 MOC 待学习状态列 `open` → `resolved`
 
 ### 判定
 
@@ -1015,8 +974,6 @@ T15 MOC 生命周期验证报告
 [通过/失败] 论文行已追加（MOC「按状态」表含该论文）
 [通过/失败] 状态同步（步骤 4：learned）
 [通过/失败] 状态同步（步骤 5：atomized）
-[通过/失败] 待学习追加（MOC「待学习」表含该概念行）
-[通过/失败] 待学习毕业同步（MOC 待学习状态 → resolved）
 
 备注：________________________________
 ```

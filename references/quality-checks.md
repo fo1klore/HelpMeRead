@@ -68,6 +68,29 @@
 
 扫描本节中所有大写缩写（2-6 个大写字母），检查首次出现时是否附带一句解释（全称 + 基本含义）。对于领域内常见通用缩写（AI、ML、NLP、CPU、GPU），若上下文已清晰则豁免。
 
+### 11. 公式格式全局扫描
+
+**全文件扫描**（不按模块/区域区分，扫描整节课文件），逐项验证：
+
+#### 11a. 反引号/代码块内公式检测
+扫描所有反引号包裹内容（\`` `code` \`` 和 \```` ```code `````\``），若包含下列数学 Unicode 符号任意一个 → 告警并修正：`μ σ ∑ α β γ θ λ π ∈ ∉ ⊂ ⊆ ∩ ∪ ∀ ∃ ⊥ ∇ ∂ ≈ ∼ ≠ ≡ ≤ ≥ ∞`
+
+#### 11b. Heading 公式缺失检测
+扫描所有标题行（以 `#` 开头的行），检测是否包含上列数学 Unicode 符号但未被 `$` 包裹 → 告警，用 `$符号$` 包裹
+
+#### 11c. 单元公式裸露检测
+扫描全文件，查找非 `$` 包裹的 `μ`、`σ`、`∑` 等高频数学符号，若出现于正文（非代码块、非反引号）但无 `$` 包裹 → 告警，修正为 `$符号$`
+
+**优先级**：三项检测在完整课程落盘后逐文件执行，不通过则修正后重检，不阻塞管线。修正不通过则标注 `> [!WARNING] 公式格式偏差` 在文件头部。
+
+### 12. 节首术语集中度检查
+
+扫描每节课程文件**前 30% 行**范围内：
+- 若出现含 ≥3 个 `[[概念名]]` 双链的表格行（以 `|` 开头的行）且内容中无超过 5 个汉字的自然语言解释段 → 告警，要求 agent 将表格拆散为内联解释
+- 若出现以 bullet 列表形式集中列出全部术语（连续 ≥3 个 bullet 行均含 `[[概念名]]` 或加粗术语）且无完整句子解释 → 告警，要求改为分散嵌入
+
+**整改要求**：将集中术语表拆散，每个术语移动到它在正文中首次出现的位置，以 `[[概念名]]`（核心概念）或加粗（前置术语）或自然语言（背景术语）格式内联解释。
+
 ## 检测命令
 
 ```bash
@@ -94,5 +117,39 @@ for f in glob.glob('papers/*/course/*.md'):
 # 缩写检查
 for f in papers/*/course/*.md; do
   grep -oP '\b[A-Z]{2,6}\b' "$f" | sort -u
+done
+
+# 11a. 反引号内公式检测
+for f in papers/*/course/*.md; do
+  # 提取所有反引号包裹内容，检查是否含数学 Unicode
+  backtick_content=$(grep -oP '`[^`]+`' "$f" | grep -oP '[\x{03BC}\x{03C3}\x{2211}\x{03B1}\x{03B2}\x{03B3}\x{03B8}\x{03BB}\x{03C0}\x{2208}\x{2209}\x{2282}\x{2286}\x{2229}\x{222A}\x{2200}\x{2203}\x{22A5}\x{2207}\x{2202}\x{2248}\x{223C}\x{2260}\x{2261}\x{2264}\x{2265}\x{221E}]')
+  if [ -n "$backtick_content" ]; then
+    echo "⚠️  $f: 反引号内检测到数学符号"
+    echo "   符号: $backtick_content"
+  fi
+done
+
+# 11b. Heading 公式缺失检测
+for f in papers/*/course/*.md; do
+  # 查找 heading 行中数学符号但无 $ 包围
+  grep -n '^#' "$f" | while IFS=: read -r line_num content; do
+    # 检查是否包含数学符号但无 $
+    if echo "$content" | grep -qP '[\x{03BC}\x{03C3}\x{2211}]' && ! echo "$content" | grep -q '\$'; then
+      echo "⚠️  $f:$line_num heading 含数学符号但无 \$ 包裹: $content"
+    fi
+  done
+done
+
+# 11c. 公式裸露检测
+for f in papers/*/course/*.md; do
+  # 扫描非代码块、非反引号区域的裸露数学符号
+  grep -nP 'μ|σ|∑|α|β|γ|θ|λ|π' "$f" | while IFS=: read -r line_num content; do
+    # 跳过反引号行和代码块行
+    if ! echo "$content" | grep -qP '^```|`[^`]*`'; then
+      if ! echo "$content" | grep -q '\$'; then
+        echo "⚠️  $f:$line_num 裸露数学符号: $content"
+      fi
+    fi
+  done
 done
 ```

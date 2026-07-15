@@ -37,15 +37,14 @@
 | 课程使用未解释的专业概念 | 步骤 2 | F2-9 概念解释覆盖 |
 | 概念解释句含未解释的嵌套术语 | 步骤 2 | F2-10 嵌套术语 |
 | 可跳过标注未位于课程节顶部 | 步骤 2 | F2-11 skip 位置 |
+| 课程中公式格式违规（代码块包裹/Heading 裸符号/模块裸露） | 步骤 2 | F2-13 全局 MathJax
 | Obsidian URI 打不开（无自动回退） | 步骤 4 | F3-1 vault 路径/编码 |
-| to-learn 未触发（被动提及概念） | 步骤 3-4 | F3-3 触发条件 |
 | 引导流程跳跃 / 未展示参考答案 | 步骤 5 | F4-1 / F4-3 |
 | 概念自测步骤编号暴露 + 反查/拆解未静默 | 步骤 5 | F4-4 |
 | 产物路径和预期不一致 | 产物后 | 命名约定、重名处理 |
 | 概念笔记"相关"区块无关系说明 | 产物后 | F5-3 模板格式 |
 | MOC 不存在 / 论文条目不同步 | 步骤 6 | F6-* |
 | MOC 状态列与笔记 frontmatter 不一致 | 步骤 6 | F6-* |
-| MOC 待学习表与 to-learn/ 目录不同步 | 步骤 6 | F6-* |
 
 ---
 
@@ -408,6 +407,50 @@ done
 
 > 关联 issue：⑪
 
+### F2-13：公式格式违规——代码块包裹 / Heading 裸符号 / Analogy 及其他模块裸露
+
+**现象**：课程文件中数学公式/符号出现以下三种格式问题之一：
+1. 公式被反引号或三个反引号代码块包裹（如 `` ```μ = 1``` ``）而非使用 MathJax `$...$` / `$$...$$`
+2. heading 标题行中的数学符号（μ, σ, ∑ 等）未被 `$` 包裹，以纯文本显示
+3. analogy、自测答案、小结等非正文模块中的数学符号裸露（未被 `$` 包裹）
+
+**原因**：「全课程 MathJax 统一」全局约束的执行模型是"模板级逐模块注入"而非"内容级全局检测"——agent 在 analogy、heading 等语境中未自动套用 MathJax。且缺少三条明确的反面禁令（禁止纯文本、禁止代码块包裹、heading 无豁免）。
+
+**修复**：
+1. 确认 course-design-guide.md 中全局 MathJax 规范包含正面规则 + 三条禁令 + 执行优先级声明
+2. 确认课程落盘后执行 quality-checks.md 第 11 项"公式格式全局扫描"三子项（11a/11b/11c）且均通过
+3. 不通过时：根据违规类型执行对应修正
+   - heading 裸符号 → 用 `$符号$` 包裹
+   - 代码块内公式 → 移除反引号，改用 `$...$` 或 `$$...$$`
+   - 模块裸露公式 → 用 `$...$` 包裹
+
+**检测命令**：
+```bash
+# 1. 反引号内公式检测
+for f in papers/*/course/*.md; do
+  backtick_content=$(grep -oP '`[^`]+`' "$f" | grep -oP '[\x{03BC}\x{03C3}\x{2211}\x{03B1}\x{03B2}\x{03B3}\x{03B8}\x{03BB}\x{03C0}\x{2208}\x{2209}\x{2282}\x{2286}\x{2229}\x{222A}\x{2200}\x{2203}\x{22A5}\x{2207}\x{2202}\x{2248}\x{223C}\x{2260}\x{2261}\x{2264}\x{2265}\x{221E}]')
+  [ -n "$backtick_content" ] && echo "⚠️  $f: 反引号内公式 $backtick_content"
+done
+
+# 2. Heading 裸符号检测
+for f in papers/*/course/*.md; do
+  grep -n '^#' "$f" | while IFS=: read -r n c; do
+    echo "$c" | grep -qP '[\x{03BC}\x{03C3}\x{2211}]' && ! echo "$c" | grep -q '\$' && \
+      echo "⚠️  $f:$n heading 裸符号: $c"
+  done
+done
+
+# 3. 全文件裸露检测
+for f in papers/*/course/*.md; do
+  grep -nP 'μ|σ|∑|α|β|γ' "$f" | while IFS=: read -r n c; do
+    ! echo "$c" | grep -q '^```' && ! echo "$c" | grep -q '`[^`]*`' && ! echo "$c" | grep -q '\$' && \
+      echo "⚠️  $f:$n 裸露公式: $c"
+  done
+done
+```
+
+> 关联 issue：㉖
+
 ---
 
 ## 步骤 3-4：学习阶段
@@ -442,24 +485,9 @@ start obsidian://open?vault=MyVault&file=HelpMeRead/papers/xxx/HMR-xxx.md
 1. 检查 `prev`/`next` 字段中的文件名是否与 `title` + 实际文件名匹配
 2. 导航中的 `[[链接]]` 是否对应实际存在的 `.md` 文件
 
-### F3-3：待学习机制未在用户被动提及陌生概念时触发
+### F3-3：待学习机制未触发（功能已废弃 — ㉘ 移除）
 
-**现象**：用户说"我不懂 X""这里有个 Y 我不熟悉"，agent 解释了概念但没有自动存入 `to-learn/`。
-
-**原因**（按概率排序）：
-1. 触发条件过窄——agent 只在显式提问"X 是什么？"时触发
-2. 被动提及的信号词（"不懂""不熟悉""没听过""没解释"等）未被识别
-3. agent 主动解释概念后未执行后续步骤（存入 to-learn + 提供协助）
-
-**修复**：
-1. 确认 SKILL.md 待学习机制段落包含扩展触发条件——覆盖主动提问和被动提及两种场景
-2. 主动解释概念后必须按流程执行：解释 → 自动存入 → 提供搜索协助
-
-**检测命令**：
-```bash
-# 检查 to-learn/ 目录是否有对应概念的笔记
-ls test-output/HelpMeRead/to-learn/
-```
+> 🗑️ 待学习功能已在 v3.1.4+ 整体移除。本条目保留仅为防止旧产物残留引起的误判。新生成环境中不会出现此问题。
 
 ---
 
@@ -562,7 +590,6 @@ find test-output/HelpMeRead/ -type f -name "*.md" | sort
 # │   │   └── assets/
 # │   │       └── figure-N.png
 # │   └── qa-<YYYY-MM-DD>.md
-# └── to-learn/<概念名>.md
 ```
 
 ### F5-2：frontmatter 字段缺失
@@ -710,45 +737,10 @@ for line in table.group().split('\n'):
 
 ### F6-4：MOC 待学习表与 to-learn/ 目录不同步
 
-**现象**：MOC「待学习」表中的条目与 `to-learn/` 目录下的文件不匹配（缺少行、多余行、状态不一致）。
-
-**原因**（按概率排序）：
-1. to‑learn 笔记自动存入后 MOC 同步未执行（SKILL.md 补丁④ 未执行）
-2. to‑learn 笔记毕业后 MOC 状态未同步
-3. 用户手动清除了 `to-learn/` 目录但未更新 MOC
-
-**修复**：
-1. 确认待学习机制中 MOC 同步指令已执行
-2. 扫描 `to-learn/` 目录，将 open/exploring 的条目逐一与 MOC 待学习表对比
-
-**检测命令**：
-```bash
-# 对比 MOC 待学习表与 to-learn/ 目录
-python3 -c "
-import os, re
-moc = open('test-output/HelpMeRead/HelpMeRead MOC.md').read()
-table = re.search(r'## 待学习\n\|.*?\n(\|.*\n)+', moc)
-moc_items = set()
-if table:
-    for line in table.group().split('\n'):
-        m = re.match(r'\|\s*\[\[([^\]]+)\]\]', line)
-        if m:
-            moc_items.add(m.group(1))
-to_learn_dir = 'test-output/HelpMeRead/to-learn'
-actual_items = set()
-if os.path.isdir(to_learn_dir):
-    for f in os.listdir(to_learn_dir):
-        if f.endswith('.md'):
-            actual_items.add(f.replace('.md', ''))
-missing = actual_items - moc_items
-extra = moc_items - actual_items
-if missing: print(f'MOC 待学习表缺少: {missing}')
-if extra: print(f'MOC 待学习表多余: {extra}')
-if not missing and not extra: print('MOC 待学习表与 to-learn/ 目录一致')
-"
-```
+> 🗑️ 待学习功能已在 v3.1.4+ 整体移除。本条目保留仅为防止旧产物残留引起的误判。新生成环境中 MOC 不再包含待学习表。
 
 ---
+
 
 ## 附录：检测命令速查
 

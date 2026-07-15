@@ -30,7 +30,7 @@
 
 - 用户报告（对话中指出的异常行为）
 - agent 自行检测（生成过程中发现的异常）
-- 测试失败（TESTING.md T1-T13 任一模块未通过）
+- 测试失败（TESTING.md T1-T12 任一模块未通过）
 - 产物审查（手动检查输出文件时发现）
 
 ### 1.2 写入 ISSUES.md（标准化格式）
@@ -166,7 +166,6 @@
 | 笔记结构 | obsidian-note-template.md | frontmatter-schema.md |
 | 概念筛选 | SKILL.md 步骤 2 | obsidian-note-template.md（概念模板） |
 | 问答行为 | qa-standards.md | SKILL.md（跨模块 Q&A） |
-| 待学习机制 | SKILL.md（跨模块 to-learn） | frontmatter-schema.md（to-learn 节） |
 | 命名/路径 | SKILL.md 命名约定 | failure-modes.md F5-1 |
 | 跨论文功能 | SKILL.md（跨模块 cross-paper） | frontmatter-schema.md |
 
@@ -226,7 +225,6 @@ Advisor 返回审查报告后，若有 🔴 驳回或 🟠 简化建议，调整
 | 改图片提取管线 | T3 图片提取 |
 | 改问答标准 | T11 问答 |
 | 改步骤 5 引导逻辑 | T10 步骤 5 引导 |
-| 改待学习机制 | T13 待学习功能 |
 | 改首次运行引导 | T1 环境检查 |
 | 改跨论文去重或联系 | T12 跨论文功能 |
 | 多处同时改动 | 各对应模块 + T9 全流程 |

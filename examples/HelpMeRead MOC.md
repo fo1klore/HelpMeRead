@@ -17,11 +17,3 @@ tags:
 | [[HMR-bert]] | research | atomized | nlp |
 
 <!-- 按领域、按类型等聚合视图由 Obsidian Bases 基于 frontmatter 动态生成 -->
-
-## 待学习
-
-| 概念 | 出自 | 状态 |
-|---|---|---|
-| [[positional-encoding]] | [[HMR-attention-is-all-you-need]] | resolved |
-| [[RLHF]] | [[HMR-lllms-survey]] | exploring |
-| [[LoRA]] | [[HMR-lllms-survey]] | open |

@@ -144,6 +144,49 @@ for course_file in "$TEST_DIR"/papers/*/course/*.md; do
     green "  ✅ $fname 数学符号均已 MathJax 包裹"
   fi
 done
+
+echo ""
+echo "--- 代码块内公式检查 ---"
+for course_file in "$TEST_DIR"/papers/*/course/*.md; do
+  [ -f "$course_file" ] || continue
+  fname=$(basename "$course_file")
+  issues=$(awk '
+    BEGIN { in_backtick=0; }
+    /^```/ { in_backtick=!in_backtick; next; }
+    in_backtick && /[μσ∑αβγθλπ∈∉⊂⊆∩∪∀∃⊥∇∂≈∼≠≡≤≥∞]/ {
+      printf "%s:%d: %s\n", FILENAME, NR, $0 > "/dev/stderr"
+    }
+  ' "$course_file" 2>&1 >/dev/null || true)
+  if [ -n "$issues" ]; then
+    count=$(echo "$issues" | wc -l)
+    red "  ❌ $fname: $count 处代码块中包含数学符号"
+    ERRORS=$((ERRORS + 1))
+  else
+    green "  ✅ $fname 代码块中无数学符号"
+  fi
+done
+
+echo ""
+echo "--- Heading 公式缺失检查 ---"
+for course_file in "$TEST_DIR"/papers/*/course/*.md; do
+  [ -f "$course_file" ] || continue
+  fname=$(basename "$course_file")
+  issues=$(awk '
+    /^#/ {
+      line=$0;
+      if (line ~ /[μσ∑αβγθλπ∈∉⊂⊆∩∪∀∃⊥∇∂≈∼≠≡≤≥∞]/ && line !~ /\$/) {
+        printf "%s:%d: %s\n", FILENAME, NR, $0 > "/dev/stderr"
+      }
+    }
+  ' "$course_file" 2>&1 >/dev/null || true)
+  if [ -n "$issues" ]; then
+    count=$(echo "$issues" | wc -l)
+    red "  ❌ $fname: $count 处 heading 含数学符号但无 \$ 包裹"
+    ERRORS=$((ERRORS + 1))
+  else
+    green "  ✅ $fname heading 公式均已 \$ 包裹"
+  fi
+done
 echo ""
 echo "--- 来源标注检查 ---"
 for course_file in "$TEST_DIR"/papers/*/course/*.md; do

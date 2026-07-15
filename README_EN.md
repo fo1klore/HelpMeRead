@@ -37,7 +37,6 @@ First run only asks for your Obsidian vault path. Everything else uses sensible 
 │   │   └── assets/
 │   └── qa-<date>.md
 ├── concepts/                      # Cross-paper atomic notes
-├── to-learn/                      # Auto-saved concepts to learn later
 └── HelpMeRead MOC.md              # Index
 ```
 

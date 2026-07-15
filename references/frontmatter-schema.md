@@ -1,6 +1,6 @@
 # 笔记 frontmatter schema
 
-本文件定义六类产物：文献总结笔记/原子笔记/待学习笔记/问答记录/课程文件/MOC 的 frontmatter 全字段，以及配置文件（运行时自动生成到 `.claude/skills/help-me-read/help-me-read.json`）。让 Obsidian 的 Bases / graph / 搜索能力真正可用。
+本文件定义五类产物：文献总结笔记/原子笔记/问答记录/课程文件/MOC 的 frontmatter 全字段，以及配置文件（运行时自动生成到 `.claude/skills/help-me-read/help-me-read.json`）。让 Obsidian 的 Bases / graph / 搜索能力真正可用。
 
 ---
 
@@ -93,31 +93,7 @@ tags:
 
 ---
 
-## 三、待学习笔记（to-learn/<concept>.md）
-
-```yaml
----
-title: "Positional Encoding"
-type: to-learn
-from:                                        # 从哪篇论文的哪里冒出来
-  - "[[HMR-attention-is-all-you-need]]"
-raised_date: 2026-06-22                      # 何时遇到
-status: open                                 # open / exploring / resolved
-  # open=待学, exploring=已开始查资料, resolved=搞懂了已转成正式原子笔记
-resolved_to: []                              # open/exploring 时始终为 []；resolved 时指向转成的原子笔记
-tags:
-  - to-learn
----
-```
-
-**生命周期**：
-- `open` → 待学习
-- `exploring` → 正在查资料
-- `resolved` → 毕业，内容迁到 `concepts/` 成正式原子笔记，原 to-learn 文件保留作为学习轨迹
-
----
-
-## 四、问答记录（papers/<slug>/qa-<date>.md）
+## 三、问答记录（papers/<slug>/qa-<date>.md）
 
 ```yaml
 ---
@@ -132,7 +108,7 @@ tags:
 
 ---
 
-## 五、课程文件（papers/<slug>/course/<序号>-<概念名>.md）
+## 四、课程文件（papers/<slug>/course/<序号>-<概念名>.md）
 
 课程文件不在 vault 根管理，而是在 `papers/<slug>/course/` 下。每节课程用最小 frontmatter 标记位置：
 
@@ -150,7 +126,7 @@ next: "[[03-multi-head-and-position]]"       # 下一节（双链）
 
 ---
 
-## 六、MOC（HelpMeRead MOC.md）
+## 五、MOC（HelpMeRead MOC.md）
 
 ```yaml
 ---
@@ -177,15 +153,9 @@ tags:
 
 （Bases 视图按 `area` 分组）
 
-## 待学习（open）
-| 概念 | 出自 | 状态 |
-|---|---|---|
-| [[positional-encoding]] | [[HMR-attention-is-all-you-need]] | open |
-```
-
 ---
 
-## 七、命名约定（全文唯一来源）
+## 六、命名约定（全文唯一来源）
 
 所有产物在 vault 的 `HelpMeRead/` 子目录下：
 
@@ -198,7 +168,6 @@ tags:
 | **课程图资源** | `papers/<文献简称>/course/assets/` | `assets/figure-1.png` |
 | **问答记录** | `papers/<文献简称>/qa-<YYYY-MM-DD>.md` | `papers/attention-is-all-you-need/qa-2026-06-22.md` |
 | **核心概念原子笔记** | `concepts/<概念名>.md`（跨论文共享，去重） | `concepts/self-attention.md` |
-| **待学习笔记** | `to-learn/<概念名>.md`（目录名固定英文） | `to-learn/positional-encoding.md` |
 | **MOC** | `HelpMeRead MOC.md`（固定，vault 的 HelpMeRead/ 根） | `HelpMeRead MOC.md` |
 
 文献简称一旦在某次会话中确定，本次会话内所有路径（课程目录、问答记录）都用同一个，保持一致。
@@ -214,7 +183,6 @@ SKILL.md 步骤 0 管理。字段：
 {
   "obsidian_vault": "D:\\Path\\To\\Vault",
   "qa_record": false,
-  "to_learn": true,
   "external_concepts_dirs": []
 }
 ```
@@ -223,7 +191,6 @@ SKILL.md 步骤 0 管理。字段：
 |---|---|---|
 | `obsidian_vault` | 询问（首次） | 用户 Obsidian vault 的绝对路径 |
 | `qa_record` | `false` | 是否每次 QA 后询问保存问答记录 |
-| `to_learn` | `true` | 是否开启待学习机制 |
 | `external_concepts_dirs` | `[]` | vault 内 `concepts/` 之外的原子笔记目录列表（相对路径）。去重时一并扫描，如 `["ML/concepts", "consolidate"]` |
 
 > 原 `self_check` 字段已移除（决策 J：砍掉笔记自测模块，只留课程自测）。

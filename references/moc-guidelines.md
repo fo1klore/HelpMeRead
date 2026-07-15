@@ -6,8 +6,7 @@ MOC（`HelpMeRead MOC.md`）是所有产物的**策展式索引页**。它的角
 
 1. **全集清单**：一眼看到 vault 里有哪些已处理的文献
 2. **状态仪表盘**：每篇文献当前处于什么阶段（learning / learned / atomized）
-3. **注意信号**：待学习项有哪些、哪些已解决、哪些还在卡着
-4. **导航枢纽**：从 MOC 可以跳到任意一篇文献，每篇文献通过 `up` 跳回 MOC
+3. **导航枢纽**：从 MOC 可以跳到任意一篇文献，每篇文献通过 `up` 跳回 MOC
 
 MOC 不是全自动聚合页。管线提供第一轮骨架和增量更新，用户可以根据需要调整表格排版、添加自定义分组节。
 
@@ -31,8 +30,6 @@ frontmatter 字段按 `references/frontmatter-schema.md`「六、MOC」定义，
 | **第 N 篇论文笔记生成后** | 步骤 2 末尾 | 在「按状态」表追加该论文行 |
 | **课程学完 → `status: learned`** | 步骤 4 末尾 | 在「按状态」表中将该论文的状态列改为 `learned` |
 | **原子笔记拆完 → `status: atomized`** | 步骤 5 末尾 | 在「按状态」表中将该论文的状态列改为 `atomized` |
-| **to‑learn 笔记自动存入** | 待学习机制触发 | 在「待学习」表追加该概念行，填写来源论文和 `open` 状态 |
-| **to‑learn 毕业 → `resolved`** | 待学习毕业处理 | 在「待学习」表中将该行的状态列改为 `resolved` |
 
 ### 更新操作细则
 
@@ -47,16 +44,6 @@ frontmatter 字段按 `references/frontmatter-schema.md`「六、MOC」定义，
 - 在「按状态」表中，找到 `[[HMR-<slug>]]` 所在行
 - 将第三列（状态）替换为新值
 
-**追加待学习行**：
-- `to-learn/<concept>.md` 创建后，读取 `from` 字段确定来源论文
-- `status` 填 `open`
-- 追加格式：`| [[<concept>]] | [[HMR-<slug>]] | open |`
-
-**更新待学习状态**：
-- 在「待学习」表中，找到 `[[<concept>]]` 所在行
-- 将第三列（状态）改为 `resolved`（同时 `exploring` 也按此规则更新）
-- 若表中的 `concept` 行已 `resolved`，保留该行作为学习轨迹（不删除）
-
 ---
 
 ## 维护原则
@@ -65,9 +52,8 @@ frontmatter 字段按 `references/frontmatter-schema.md`「六、MOC」定义，
 2. **一致性守则**：
    - `papers/` 下 `HMR-*.md` 的数量 = MOC「按状态」表的行数
    - MOC 中每行的 `status` = 对应笔记 frontmatter 的 `status`
-   - MOC「待学习」表的内容 = `to-learn/` 下 `status != resolved` 的笔记
 3. **聚合数据归 Bases**：不写硬编码计数行（如 `| attention | 3 |`），由 Obsidian Bases 基于 frontmatter 动态生成
-4. **用户可以编辑**：用户可自由修改 MOC 的排版、添加自定义分组、写入注释。管线只在上述 6 个触发时机做最小化更新
+4. **用户可以编辑**：用户可自由修改 MOC 的排版、添加自定义分组、写入注释。管线只在上述 4 个触发时机做最小化更新
 
 ---
 
@@ -91,12 +77,4 @@ tags:
 | [[HMR-attention-is-all-you-need]] | research | learned | attention |
 | [[HMR-lllms-survey]] | survey | learning | llm |
 | [[HMR-bert]] | research | atomized | nlp |
-
-## 待学习
-
-| 概念 | 出自 | 状态 |
-|---|---|---|
-| [[positional-encoding]] | [[HMR-attention-is-all-you-need]] | resolved |
-| [[RLHF]] | [[HMR-lllms-survey]] | exploring |
-| [[LoRA]] | [[HMR-lllms-survey]] | open |
 ```

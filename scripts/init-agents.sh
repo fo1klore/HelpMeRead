@@ -20,8 +20,10 @@ fi
 
 TARGET_DIR="$1"
 AGENTS_DIR="$TARGET_DIR/.claude/agents"
+SKILL_REF_DIR="$TARGET_DIR/.claude/skills/help-me-read/references"
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 mkdir -p "$AGENTS_DIR"
+mkdir -p "$SKILL_REF_DIR"
 
 # ── write_agent( file, name, tmpfile ) ──
 # 将临时文件写入目标，内容一致则跳过。
@@ -60,8 +62,8 @@ tools:
 ## 流程
 
 1. 读取 prompt 中的输入（类型、slug、vault、source 文件路径）
-2. Read `references/frontmatter-schema.md`（命名约定）
-3. Read `references/course-design-guide.md`（术语分类细则）
+2. Read `__SKILL_REF_DIR__/frontmatter-schema.md`（命名约定）
+3. Read `__SKILL_REF_DIR__/course-design-guide.md`（术语分类细则）
 4. Read `<source 文件路径>`（论文原文）
 5. 通读原文，识别术语，按三类分类：
 
@@ -100,6 +102,8 @@ tools:
 **不要写入磁盘**。全部产出为最终输出的 JSON。
 AGENT_EOF
 write_agent "$AGENTS_DIR/concept-mapper.md" "concept-mapper" "$tmp"
+# 替换 __SKILL_REF_DIR__ 为实际绝对路径，确保部署后 subagent CWD 无关
+sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$AGENTS_DIR/concept-mapper.md"
 
 # ────────── course-generator ──────────
 tmp=$(mktemp)
@@ -123,10 +127,10 @@ tools:
 ## 前置步骤
 
 执行前先读取参考文件：
-- `references/course-design-guide.md`（课程设计、节数弹性、callout 用法）
-- `references/quality-checks.md`（10 项完整性检查）
-- `references/obsidian-note-template.md`（原子笔记骨架格式）
-- `references/frontmatter-schema.md`（frontmatter 字段 schema）
+- `__SKILL_REF_DIR__/course-design-guide.md`（课程设计、节数弹性、callout 用法）
+- `__SKILL_REF_DIR__/quality-checks.md`（完整性检查）
+- `__SKILL_REF_DIR__/obsidian-note-template.md`（原子笔记骨架格式）
+- `__SKILL_REF_DIR__/frontmatter-schema.md`（frontmatter 字段 schema）
 
 ## 生成步骤
 
@@ -138,6 +142,7 @@ tools:
 2. 文件 `01-<topic>.md`、`02-<topic>.md` ...
 3. 每节结构：可跳过条件 → 核心讲解+类比 → 自测(`>[!quiz]`) → 小结+预告 → 底部导航
 4. 术语处理：核心概念→[[filename_slug|原名]]+解释；前置术语→加粗+解释；背景术语→一句话解释
+   - **禁止集中术语表**：不得将全部术语整理为表格或列表放在节首。每个术语在正文首次出现处以内联方式解释。术语已出现在表格但正文中无对应位置解释 = 术语未处理。
 5. 读者画像默认零基础，首次出现解释不可省略
 6. 来源标注 `📖 [章节号]`，非原文标注`[背景]`/`[推断]`
 7. 图片引用 `references/course/assets/`（已在 Step 1 提取）
@@ -151,9 +156,10 @@ tools:
 5. 若文件已存在则跳过（去重）
 
 ### D. 质量检查（必做）
-按 `references/quality-checks.md` 的 10 项逐条执行。任意失败→修正重试，上限 2 次。最终报告成功/失败详情。
+按 `__SKILL_REF_DIR__/quality-checks.md` 的 12 项逐条执行。任意失败→修正重试，上限 2 次。最终报告成功/失败详情。
 AGENT_EOF
 write_agent "$AGENTS_DIR/course-generator.md" "course-generator" "$tmp"
+sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$AGENTS_DIR/course-generator.md"
 
 # ────────── note-writer ──────────
 tmp=$(mktemp)
@@ -176,10 +182,10 @@ tools:
 ## 前置步骤
 
 先读取参考文件：
-- `references/obsidian-note-template.md`（三类笔记模板）
-- `references/frontmatter-schema.md`（frontmatter 字段）
-- `references/moc-guidelines.md`（MOC 更新规则）
-- `references/qa-standards.md`（来源标注与验证标签）
+- `__SKILL_REF_DIR__/obsidian-note-template.md`（三类笔记模板）
+- `__SKILL_REF_DIR__/frontmatter-schema.md`（frontmatter 字段）
+- `__SKILL_REF_DIR__/moc-guidelines.md`（MOC 更新规则）
+- `__SKILL_REF_DIR__/qa-standards.md`（来源标注与验证标签）
 
 ## 生成步骤
 
@@ -197,10 +203,11 @@ tools:
 
 ### C. MOC 同步
 检查 `HelpMeRead MOC.md`：
-- 不存在 → 创建（frontmatter: type:moc, tags:[moc]），含「按状态」表和「待学习」表
+- 不存在 → 创建（frontmatter: type:moc, tags:[moc]），含「按状态」表
 - 已存在 → 在「按状态」表追加当前论文行
 AGENT_EOF
 write_agent "$AGENTS_DIR/note-writer.md" "note-writer" "$tmp"
+sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$AGENTS_DIR/note-writer.md"
 
 # ── 更新 SKILL.md agent 更新标志 ──
 SKILL_FILE="$PROJECT_ROOT/SKILL.md"
