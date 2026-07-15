@@ -73,7 +73,9 @@
 
 ---
 	
-## ⚙️ 配置（.claude/skills/help-me-read/help-me-read.json）
+## ⚙️ 配置
+
+配置文件 `help-me-read.json`（由 `preflight.sh` 根据部署上下文自动解析）
 
 | 项 | 默认 | 说明 |
 |---|---|---|

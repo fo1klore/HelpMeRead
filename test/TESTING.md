@@ -123,11 +123,15 @@ HelpMeRead/
 > **零破坏原则**：T1-D 不修改、不备份、不破坏任何生产配置。所有判定通过观察产物落点 + 配置指纹（mtime + size）实现。
 
 1. 确认 `test/test-config.json` 中 `obsidian_vault` 指向 `test-output/`
-2. **确定生产配置路径**（按 preflight.sh 逻辑）：存在 `.claude/` → `.claude/skills/help-me-read/help-me-read.json`，否则 `~/.claude/skills/help-me-read/help-me-read.json`
+2. **确定生产配置路径**（按 preflight.sh 逻辑）：PROJECT_ROOT 在 `.claude/skills/` 内（安装模式）→ `$PROJECT_ROOT/help-me-read.json`，否则（开发模式）→ `$PROJECT_ROOT/.claude/skills/help-me-read/help-me-read.json`
 3. **记录**生产配置文件的当前 mtime + size（如有）：
    ```bash
-   export PROD_CONFIG=".claude/skills/help-me-read/help-me-read.json"
-   [ ! -f ".claude/skills/help-me-read/help-me-read.json" ] && PROD_CONFIG="$HOME/.claude/skills/help-me-read/help-me-read.json"
+   # 开发模式路径
+   PROD_CONFIG=".claude/skills/help-me-read/help-me-read.json"
+   # 安装模式路径
+   [ ! -f "$PROD_CONFIG" ] && PROD_CONFIG="help-me-read.json"
+   # 全局 fallback
+   [ ! -f "$PROD_CONFIG" ] && PROD_CONFIG="$HOME/.claude/skills/help-me-read/help-me-read.json"
    stat -c '%s %Y' "$PROD_CONFIG" > /tmp/prod_config_before 2>/dev/null
    # 或在 PowerShell 下：(Get-Item "$env:USERPROFILE\.claude\skills\help-me-read\help-me-read.json" -ErrorAction SilentlyContinue) | ForEach-Object {"{0} {1}" -f $_.Length,$_.LastWriteTime} > $env:TEMP\prod_config_before.txt
    ```
