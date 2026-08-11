@@ -70,6 +70,37 @@ jq -r '.obsidian_vault' "$CONFIG_PATH" 2>/dev/null | xargs ls -d
 
 ---
 
+### F0-4：subagent 参考文件路径寻址失败（相对路径 / 空目录绝对路径）
+
+**现象**：concept-mapper / course-generator / note-writer 运行时读不到 `references/*.md`，跳过参考文件约束，产物结构/格式偏离预期；或 Read 报路径不存在。
+
+**原因**：
+- v3.0 用裸相对路径 `references/...`，依赖 subagent CWD 恰好为 skill 目录
+- v3.2 改为 `__SKILL_REF_DIR__` 占位符 + sed 烘焙绝对路径，但基址误设为 `$TARGET_DIR/.claude/skills/help-me-read/references`（在产物输出目录下捏造的空 skill 结构）且从未复制参考文件
+- 正确基址是 skill 安装目录 `$PROJECT_ROOT/references`（随 skill 分发，天然存在）
+
+**修复**：
+1. 确认 init-agents.sh 中 `SKILL_REF_DIR="$PROJECT_ROOT/references"`，且无 `mkdir -p "$SKILL_REF_DIR"`
+2. 确认 SKILL.md 门禁部署目标为项目根 `<vault>`，命令为 `bash .claude/skills/help-me-read/scripts/init-agents.sh <vault>`
+3. 重新运行 init-agents.sh 使已部署 agent 的参考路径指向真实文件
+4. 清理历史误部署残留：删除 `<vault>/HelpMeRead/.claude/`
+
+**检测命令**：
+```bash
+# 逐一解析已部署 agent 中所有 /.../references/*.md 绝对路径，MISS 即异常
+for f in .claude/agents/concept-mapper.md .claude/agents/course-generator.md .claude/agents/note-writer.md; do
+  grep -oE '/[^ ()]*references/[a-z-]+\.md' "$f" | while read -r p; do
+    if [ -f "$p" ]; then echo "OK   $p"; else echo "MISS $p"; fi
+  done
+done
+# v3.0 相对路径残留（无前导 / 的 references/...）不命中上面的绝对路径正则，
+# 另查：grep -n 'references/[a-z-]*\.md' .claude/agents/*.md 并确认每个都以绝对路径开头
+# 兜底：查找历史版本在产物目录下残留的空 references 目录
+find <项目目录> -type d -path '*/.claude/skills/help-me-read/references' -empty 2>/dev/null
+```
+
+---
+
 ## 步骤 1：原文获取与图片提取
 
 ### F1-1：抓取内容过短（仅摘要页）

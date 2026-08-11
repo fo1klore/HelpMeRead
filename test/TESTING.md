@@ -996,7 +996,7 @@ T15 MOC 生命周期验证报告
 
 #### 步骤
 
-1. 执行 `bash scripts/init-agents.sh`
+1. 执行 `bash scripts/init-agents.sh .`（目标为仓库根，agent 部署到 `.claude/agents/`）
 2. 确认三个文件存在：
    ```bash
    check "concept-mapper.md" "test -f '.claude/agents/concept-mapper.md'"
@@ -1013,8 +1013,28 @@ T15 MOC 生命周期验证报告
      check "$f tools" "head -15 '$f' | grep -q '^tools:'"
    done
    ```
-4. 确认幂等性：重复执行 `bash scripts/init-agents.sh` 不报错、不覆盖已有文件
-5. 确认 `init-agents.sh` 不修改 `.claude/agents/` 中已有的其他文件（如有）
+4. 确认占位符零残留、引用绝对 references 目录、参考路径可解析（F0-4 检测：绝对路径指向 skill 安装目录 `references/`，随仓库分发）：
+   ```bash
+   # 占位符零残留
+   for f in .claude/agents/concept-mapper.md .claude/agents/course-generator.md .claude/agents/note-writer.md; do
+     check "$f 占位符零残留" "! grep -q '__SKILL_REF_DIR__' '$f'"
+   done
+   # 引用绝对 references 目录（防止 v3.0 相对路径残留）
+   for f in .claude/agents/concept-mapper.md .claude/agents/course-generator.md .claude/agents/note-writer.md; do
+     check "$f 引用绝对 references 目录" "grep -q \"\$PWD/references/\" '$f'"
+   done
+   # 每个 /.../references/*.md 绝对路径均指向真实文件
+   for f in .claude/agents/concept-mapper.md .claude/agents/course-generator.md .claude/agents/note-writer.md; do
+     check "$f 参考路径可解析" "grep -oE '/[^ ()]*references/[a-z-]+\.md' '$f' | while read -r p; do test -f \"\$p\" || exit 1; done"
+   done
+   ```
+5. 确认幂等性：重复执行 `bash scripts/init-agents.sh .` 不报错、不覆盖已有文件
+6. 确认 `init-agents.sh` 不修改 `.claude/agents/` 中已有的其他文件（如有）
+7. **测试后恢复 `SKILL.md` agent 更新标志为 0**（脚本成功运行会把标志翻为 1，防止测试污染仓库状态）：
+   ```bash
+   sed -i '' 's/agent更新标志：1/agent更新标志：0/' SKILL.md
+   check "SKILL.md flag 恢复为 0" "grep -q 'agent更新标志：0' SKILL.md"
+   ```
 
 #### 判定
 
@@ -1023,8 +1043,10 @@ T16-A init-agents 安装报告
 
 [通过/失败] 三个 subagent 文件安装完成（concept-mapper / course-generator / note-writer）
 [通过/失败] frontmatter 字段完整（name / description / model / tools）
+[通过/失败] 占位符零残留 + references/* 参考路径均可解析（F0-4 检测）
 [通过/失败] 幂等性：重复安装不报错、不覆盖
 [通过/失败] 不修改无关文件
+[通过/失败] 测试后 SKILL.md agent 更新标志恢复为 0
 
 备注：________________________________
 ```

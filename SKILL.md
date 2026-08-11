@@ -16,7 +16,7 @@ triggers: "帮我读、总结这篇、读一下、吃透、做成课程、记到
 > - 不为 `1` → 执行下方部署命令，部署成功前不得进入后续步骤
 >
 > ```bash
-> bash scripts/init-agents.sh <vault>/HelpMeRead
+> bash .claude/skills/help-me-read/scripts/init-agents.sh <vault>
 > ```
 > 部署成功后脚本自动将标志置为 `1`。
 

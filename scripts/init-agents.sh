@@ -5,14 +5,14 @@
 # 不在项目工程目录内创建任何 subagent 文件。
 # 用法: bash scripts/init-agents.sh <目标目录>
 #
-# 示例: bash scripts/init-agents.sh /Users/liyi/ObsidianVault/HelpMeRead
+# 示例: bash scripts/init-agents.sh /Users/liyi/ObsidianVault
 #       部署后在 SKILL.md 头部将 agent 更新标志设为 1
 
 set -e
 
 if [ $# -lt 1 ]; then
     echo "用法: bash scripts/init-agents.sh <目标目录>"
-    echo "示例: bash scripts/init-agents.sh /path/to/vault/HelpMeRead"
+    echo "示例: bash scripts/init-agents.sh /path/to/vault"
     echo ""
     echo "将 subagent 定义文件部署到 <目标目录>/.claude/agents/"
     exit 1
@@ -20,13 +20,17 @@ fi
 
 TARGET_DIR="$1"
 AGENTS_DIR="$TARGET_DIR/.claude/agents"
-SKILL_REF_DIR="$TARGET_DIR/.claude/skills/help-me-read/references"
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# 参考文件随 skill 安装分发于 $PROJECT_ROOT/references，subagent 直接读取其绝对路径，
+# 不在目标目录下复制或新建 skill 结构
+SKILL_REF_DIR="$PROJECT_ROOT/references"
 mkdir -p "$AGENTS_DIR"
-mkdir -p "$SKILL_REF_DIR"
+# 守卫：PROJECT_ROOT 解析异常时显式失败，避免 sed 把 __SKILL_REF_DIR__ 替换为空路径
+[ -d "$SKILL_REF_DIR" ] || { echo "错误: references 目录不存在: $SKILL_REF_DIR"; exit 1; }
 
 # ── write_agent( file, name, tmpfile ) ──
 # 将临时文件写入目标，内容一致则跳过。
+# 注意：调用方须先把 __SKILL_REF_DIR__ 替换为绝对路径，幂等比较才基于最终内容。
 write_agent() {
     local file="$1" name="$2" tmpfile="$3"
     if [ ! -f "$file" ]; then
@@ -101,9 +105,8 @@ tools:
 
 **不要写入磁盘**。全部产出为最终输出的 JSON。
 AGENT_EOF
+sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$tmp"
 write_agent "$AGENTS_DIR/concept-mapper.md" "concept-mapper" "$tmp"
-# 替换 __SKILL_REF_DIR__ 为实际绝对路径，确保部署后 subagent CWD 无关
-sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$AGENTS_DIR/concept-mapper.md"
 
 # ────────── course-generator ──────────
 tmp=$(mktemp)
@@ -158,8 +161,8 @@ tools:
 ### D. 质量检查（必做）
 按 `__SKILL_REF_DIR__/quality-checks.md` 的 12 项逐条执行。任意失败→修正重试，上限 2 次。最终报告成功/失败详情。
 AGENT_EOF
+sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$tmp"
 write_agent "$AGENTS_DIR/course-generator.md" "course-generator" "$tmp"
-sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$AGENTS_DIR/course-generator.md"
 
 # ────────── note-writer ──────────
 tmp=$(mktemp)
@@ -206,8 +209,8 @@ tools:
 - 不存在 → 创建（frontmatter: type:moc, tags:[moc]），含「按状态」表
 - 已存在 → 在「按状态」表追加当前论文行
 AGENT_EOF
+sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$tmp"
 write_agent "$AGENTS_DIR/note-writer.md" "note-writer" "$tmp"
-sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$AGENTS_DIR/note-writer.md"
 
 # ── 更新 SKILL.md agent 更新标志 ──
 SKILL_FILE="$PROJECT_ROOT/SKILL.md"

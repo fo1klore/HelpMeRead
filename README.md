@@ -1,4 +1,4 @@
-# 📚 Help Me Read v3.2.1
+# 📚 Help Me Read v3.2.2
 
 > [English version](README_EN.md)
 
@@ -118,6 +118,37 @@
 
 > 所有产物集中在一个 `HelpMeRead/` 目录下，可整体删除来卸载，不与你的其他笔记混淆。
 
+## 🗂️ 部署后结构（skill 安装 + subagent 部署）
+
+skill 与 subagent 不进入产物目录，而是安装在**运行 Claude Code 的项目目录**（通常是你的 Obsidian vault）下：
+
+```
+<项目目录>/                               # = Obsidian vault（运行 Claude Code 处）
+├── .claude/
+│   ├── skills/help-me-read/             # skill 安装（git clone 本仓库）
+│   │   ├── SKILL.md                     # 触发入口 + agent 部署门禁
+│   │   ├── references/                  # subagent 参考文件（随 skill 分发，只读）
+│   │   │   ├── frontmatter-schema.md
+│   │   │   ├── course-design-guide.md
+│   │   │   └── ...（共 10 个）
+│   │   ├── scripts/init-agents.sh       # subagent 部署脚本
+│   │   └── help-me-read.json            # 运行配置
+│   └── agents/                          # 部署的 subagent 定义（由 init-agents.sh 生成）
+│       ├── concept-mapper.md
+│       ├── course-generator.md
+│       └── note-writer.md
+└── HelpMeRead/                          # 仅 skill 生成产物（见上节）
+    ├── papers/
+    ├── concepts/
+    └── HelpMeRead MOC.md
+```
+
+**路径约定**：
+- subagent 通过**绝对路径** `<项目目录>/.claude/skills/help-me-read/references/` 读取参考文件（部署时由 init-agents.sh 烘焙进 agent 定义，与运行目录无关）
+- 部署目标永远是**项目根 `<项目目录>`**，subagent 落到 `<项目目录>/.claude/agents/`；`<项目目录>/HelpMeRead/` 只存放产物，不放置任何 skill/subagent 文件
+- 生产部署只用 SKILL.md 门禁命令（skill 安装处的脚本）；**禁止用开发仓库的脚本直接部署**，否则 agent 内会烘焙开发仓库的绝对路径，仓库移动/删除后静默失效
+- **vault 迁移后需重跑门禁**：skill 随项目目录移动后，烘焙的旧绝对路径失效，重新执行 `init-agents.sh` 即可
+
 ## 📋 项目仓库结构
 
 ```
@@ -157,6 +188,7 @@ HelpMeRead/
 
 | 日期 | 变更 | 📝 开发者寄语 |
 |---|---|---|
+| 2026-08-11 | **v3.2.2** · subagent 参考路径修复：`SKILL_REF_DIR` 改为 skill 安装目录 `$PROJECT_ROOT/references`（v3.2 误在产物目录 `<vault>/HelpMeRead` 下捏造空 skill 结构且从未复制参考文件，导致 ㉗ 修复不完整回归）；SKILL.md 门禁部署目标改为项目根 `<vault>`；README 补充「部署后结构」章节；failure-modes 补全 F0-4；T16-A 补参考路径可解析验证 | 还有吗？ |
 | 2026-07-26 | **v3.2.1** · analogy 模块格式自由化：移除三段式填空模板（场景/映射/关键洞察），类比形式由 agent 根据概念特点自选（故事/对话/视觉比喻/类比叙事） | 我们不妨直说 |
 | 2026-07-15 | **v3.2** · 4 issue 集中修复：subagent 参考文件路径改为 skill 目录绝对路径（消除 CWD 依赖）；全局 MathJax 约束重构（正面规则+三条禁令+质量检查全覆盖）；课程集中术语表回归拦截；待学习功能整体移除 | 我们总是不把话说清楚 |
 | 2026-07-15 | **v3.1.3** · 配置路径统一为 preflight.sh 绝对路径驱动（防嵌套 CWD 误判）；步骤 4 取消自动打开，改输出文件路径；步骤 5 参考答案解耦为独立展示步骤 + MOC 自动更新 | 虫子怎么老是杀不掉 |
