@@ -72,7 +72,46 @@
 **首次使用时只问 vault 路径**，其余配置用合理默认值，让你尽快看到第一份产物。此后自动记住。
 
 ---
-	
+
+## 🖥️ 平台支持与依赖
+
+| 平台 | 状态 | 说明 |
+|---|---|---|
+| macOS | ✅ 完整支持 | 主力开发环境（BSD 工具链） |
+| Linux / WSL | ✅ 完整支持 | GNU 工具链 |
+| Windows + Git Bash | ✅ 完整支持（v3.2.3 起） | 脚本自动把 `/d/...` 归一化为 `D:/...` 混合形式，bash 与 Read 工具双向可读 |
+| Windows 原生 PowerShell / cmd | ❌ 不支持 | 脚本依赖 bash，无等价实现 |
+
+脚本一律使用 LF 换行（`.gitattributes` 已声明 `* text=auto eol=lf`）。若在 Windows 上 clone 后脚本报 `$'\r': command not found` 或 `set: -\r: invalid option`，说明工作副本还是 CRLF。先试重新检出：
+
+```bash
+git checkout -- .
+```
+
+若 `git status` 显示干净、文件仍是 CRLF（CRLF→LF 归一化会让 git 认为内容没变），用强制重检出：
+
+```bash
+git rm -r --cached . && git reset --hard
+```
+
+自检命令：`git ls-files --eol scripts/*.sh`，出现 `w/crlf` 就是中招了。
+
+**依赖清单**：
+
+| 依赖 | 必需性 | 用途 |
+|---|---|---|
+| bash ≥ 4 | 必需 | 运行 `scripts/` 下所有脚本 |
+| curl | 必需 | 网络可达性检测 |
+| `python3` 或 `python` | 必需 | MOC 一致性检查、依赖探测（Windows 上通常只有 `python`） |
+| poppler-utils（`pdfimages`） | 可选 | PDF 图片提取首选路径 |
+| PyMuPDF（`fitz`） | 可选 | 图片提取备选路径 |
+
+Ghostscript 与 Pandoc 不需要——它们已从依赖检测中移除（全仓无消费方）。
+
+依赖检测：`bash scripts/check-deps.sh`，输出 `KEY=VALUE` 一行一个键。
+
+---
+
 ## ⚙️ 配置
 
 配置文件 `help-me-read.json`（由 `preflight.sh` 根据部署上下文自动解析）
@@ -188,6 +227,7 @@ HelpMeRead/
 
 | 日期 | 变更 | 📝 开发者寄语 |
 |---|---|---|
+| 2026-11-09 | **v3.2.3** · 跨平台兼容性集中修复（6 issue）：`sed -i ''` 改 bash 参数展开（GNU sed 下脚本直接崩）；MSYS `/d/...` 路径经 `cygpath -m` 归一化（Read 工具不可解析）；`.gitattributes` 声明 `eol=lf`（Windows 检出 CRLF 破坏脚本）；`check-deps.sh` 输出契约规范化 + `python3`/`file`/`jq` 跨平台探测；`verify.sh` 图片改魔数判定、`grep -c` 双输出修复；`stat -c` 改 `cksum`（macOS 上门禁恒通过）。新增平台支持矩阵与依赖清单 | ___ |
 | 2026-08-11 | **v3.2.2** · subagent 参考路径修复：`SKILL_REF_DIR` 改为 skill 安装目录 `$PROJECT_ROOT/references`（v3.2 误在产物目录 `<vault>/HelpMeRead` 下捏造空 skill 结构且从未复制参考文件，导致 ㉗ 修复不完整回归）；SKILL.md 门禁部署目标改为项目根 `<vault>`；README 补充「部署后结构」章节；failure-modes 补全 F0-4；T16-A 补参考路径可解析验证 | 还有吗？ |
 | 2026-07-26 | **v3.2.1** · analogy 模块格式自由化：移除三段式填空模板（场景/映射/关键洞察），类比形式由 agent 根据概念特点自选（故事/对话/视觉比喻/类比叙事） | 我们不妨直说 |
 | 2026-07-15 | **v3.2** · 4 issue 集中修复：subagent 参考文件路径改为 skill 目录绝对路径（消除 CWD 依赖）；全局 MathJax 约束重构（正面规则+三条禁令+质量检查全覆盖）；课程集中术语表回归拦截；待学习功能整体移除 | 我们总是不把话说清楚 |

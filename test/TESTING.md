@@ -68,6 +68,8 @@ HelpMeRead/
 | 文献速览环节 | T2 + T9 |
 | quality-checks.md 变化 | T4-D + T17 |
 | init-agents.sh 变化 | T16-A |
+| verify.sh / check-deps.sh 变化 | T8-V + T1 |
+| 脚本语法或换行符规范变化 | T1（第 9-10 步）+ T16-A |
 | 多处同时改动 | 各对应模块 + T9 全流程 |
 | 新论文类型引入 | T2 + T4 + T5 |
 
@@ -103,16 +105,28 @@ HelpMeRead/
 
 1. 检查 `test/test-config.json` 存在，`obsidian_vault` 路径存在且可写
 2. 检查 `test-output/` 和 `test-output/HelpMeRead/` 目录存在（不存在则创建）
-3. 检查 PyMuPDF 是否可用：`pip list 2>/dev/null | grep PyMuPDF`
-4. 检查 poppler-utils 是否可用：`which pdfimages 2>/dev/null`
+3. 检查 PyMuPDF 是否可用：`pip list 2>/dev/null | grep PyMuPDF`（Windows 上解释器常为 `python` / `py`，不一定有 `python3`）
+4. 检查 poppler-utils 是否可用：`command -v pdfimages`
 5. 检查网络可达：抓取 `https://arxiv.org/abs/1706.03762` 和 `https://arxiv.org/abs/2505.19240` 确认可返回
 6. 检查 Obsidian URI 格式：确认 `obsidian://open?vault=<vault名>&file=<路径>` 中 vault 名提取正确
 7. 检查 `bash scripts/preflight.sh` 可执行且输出格式正确：
    ```bash
+   bash scripts/preflight.sh | grep -q '^PROJECT_ROOT='
    bash scripts/preflight.sh | grep -q '^MODE='
    bash scripts/preflight.sh | grep -q '^CONFIG_PATH='
    ```
 8. 检查 subagent 安装状态——确认 `.claude/agents/` 存在（若不存在则提示运行 `bash scripts/init-agents.sh`）
+9. 检查换行符合规（验证 ㉞）：受控脚本必须全部是 LF
+   ```bash
+   git ls-files --eol scripts/*.sh | grep -q 'w/crlf' \
+     && echo "❌ 工作副本为 CRLF，需重新检出（bash 会在 set -e\\r 处崩溃）" \
+     || echo "✅ 脚本为 LF"
+   ```
+10. 检查依赖探测输出契约（验证 ㉟）：`check-deps.sh` 只允许 `KEY=VALUE` 行
+    ```bash
+    bash scripts/check-deps.sh | grep -vE '^(NETWORK|PDFIMAGES|PYMUPDF|PYTHON)=' \
+      && echo "❌ 输出格式异常（存在裸值行）" || echo "✅ 输出格式正常"
+    ```
 
 ### T1-D：测试模式检测（验证 ㉑ 修复）
 
@@ -120,11 +134,13 @@ HelpMeRead/
 
 #### 步骤
 
-> **零破坏原则**：T1-D 不修改、不备份、不破坏任何生产配置。所有判定通过观察产物落点 + 配置指纹（mtime + size）实现。
+> **零破坏原则**：T1-D 不修改、不备份、不破坏任何生产配置。所有判定通过观察产物落点 + 配置指纹（`cksum`：CRC + 字节数）实现。
+
+> **跨平台注意**：指纹一律用 `cksum`（POSIX，BSD/GNU 都有）。不要用 GNU `stat` 的 size/时间戳选项（macOS 的 BSD `stat` 不支持该选项，采集结果为空，前后两个空文件 `diff` 恒相等，门禁会静默失效，见 ISSUES ㊲）。也不要用 `date -r`，BSD 与 GNU 语义不同。
 
 1. 确认 `test/test-config.json` 中 `obsidian_vault` 指向 `test-output/`
 2. **确定生产配置路径**（按 preflight.sh 逻辑）：PROJECT_ROOT 在 `.claude/skills/` 内（安装模式）→ `$PROJECT_ROOT/help-me-read.json`，否则（开发模式）→ `$PROJECT_ROOT/.claude/skills/help-me-read/help-me-read.json`
-3. **记录**生产配置文件的当前 mtime + size（如有）：
+3. **记录**生产配置文件的当前指纹（如有）：
    ```bash
    # 开发模式路径
    PROD_CONFIG=".claude/skills/help-me-read/help-me-read.json"
@@ -132,17 +148,24 @@ HelpMeRead/
    [ ! -f "$PROD_CONFIG" ] && PROD_CONFIG="help-me-read.json"
    # 全局 fallback
    [ ! -f "$PROD_CONFIG" ] && PROD_CONFIG="$HOME/.claude/skills/help-me-read/help-me-read.json"
-   stat -c '%s %Y' "$PROD_CONFIG" > /tmp/prod_config_before 2>/dev/null
-   # 或在 PowerShell 下：(Get-Item "$env:USERPROFILE\.claude\skills\help-me-read\help-me-read.json" -ErrorAction SilentlyContinue) | ForEach-Object {"{0} {1}" -f $_.Length,$_.LastWriteTime} > $env:TEMP\prod_config_before.txt
+   if [ -f "$PROD_CONFIG" ]; then
+       cksum "$PROD_CONFIG" > /tmp/prod_config_before || { echo "FAIL: 指纹采集失败，测试中止"; exit 1; }
+   else
+       echo "ABSENT" > /tmp/prod_config_before
+   fi
    ```
 4. 跑**完整步骤 2**（课程 + 笔记 + 概念三件套全跑），而非最小流程——验证多产物路径下都走 test-config
 5. **观察产物落点**：确认全部新文件（课程、笔记、概念、QA 记录）都落在 `test-output/HelpMeRead/`，而非生产 vault
 6. **观察生产 vault**：确认生产 vault 目录（生产配置中 `obsidian_vault` 指向的路径）下**没有**新增任何本测试产生的文件
-7. **观察配置指纹**：确认生产配置文件的 size + mtime 都未变化（双维度防 touch 误报）：
+7. **观察配置指纹**：确认生产配置文件的 `cksum` 指纹未变化（同时覆盖内容与大小）：
 
 ```bash
 # 测试后再次记录
-stat -c '%s %Y' "$PROD_CONFIG" > /tmp/prod_config_after
+if [ -f "$PROD_CONFIG" ]; then
+    cksum "$PROD_CONFIG" > /tmp/prod_config_after
+else
+    echo "ABSENT" > /tmp/prod_config_after
+fi
 diff /tmp/prod_config_before /tmp/prod_config_after && echo "PASS: config untouched" || echo "FAIL: config was modified"
 ```
 
@@ -153,7 +176,7 @@ T1-D 测试模式检测报告（关联 ㉑ / F0-2）
 
 [通过/失败] 全部产物（课程/笔记/概念/QA）落点在 test-output/HelpMeRead/
 [通过/失败] 生产 vault 无本测试产生的任何文件
-[通过/失败] 生产配置文件 size + mtime 都未变化（双维度防 touch 误报）
+[通过/失败] 生产配置文件的 cksum 指纹未变化
 [通过/失败] test/test-config.json 被读取（产物路径匹配其 obsidian_vault）
 [通过/失败] 多产物路径无混用：课程/笔记/概念三类都走 test-config
 
@@ -749,6 +772,40 @@ frontmatter
 备注：________________________________
 ```
 
+### T8-V：verify.sh 自检（无 callout 产物不报错）
+
+**目标**：验证 `verify.sh` 在产物中**没有任何 callout** 时不触发整数比较错误（㊱），且给出明确的"无 callout"提示而不是静默跳过；顺带验证图片魔数判定可用（㉟）。
+
+#### 步骤
+
+用 `mktemp -d` 造一份最小 fixture（不要用 `test-output` 的真实产物，避免污染）：
+
+```bash
+FX="$(mktemp -d)"
+mkdir -p "$FX/HelpMeRead/papers/demo/course/assets" "$FX/HelpMeRead/concepts"
+printf -- '---\ntitle: demo\n---\n\n正文无 callout\n' > "$FX/HelpMeRead/papers/demo/HMR-demo.md"
+printf -- '---\ntitle: sec\n---\n\n正文无 callout\n' > "$FX/HelpMeRead/papers/demo/course/01-intro.md"
+printf '\x89PNG\r\n\x1a\n0000000000' > "$FX/HelpMeRead/papers/demo/course/assets/figure-1.png"
+printf '<html>not an image</html>' > "$FX/HelpMeRead/papers/demo/course/assets/figure-2.png"
+out="$(bash scripts/verify.sh "$FX/HelpMeRead" 2>&1)"
+echo "$out" | grep -q 'integer expression expected' && echo "❌ 整数比较报错" || echo "✅ 无整数比较报错"
+echo "$out" | grep -q '无 callout 标注' && echo "✅ 有 ℹ️ 提示" || echo "❌ 缺少无 callout 提示"
+echo "$out" | grep -q 'figure-1.png (有效图片)' && echo "✅ 有效图片判定正确" || echo "❌ 有效图片被误判"
+echo "$out" | grep -q 'figure-2.png (非图片文件)' && echo "✅ 无效图片判定正确" || echo "❌ HTML 伪装图片未被拦截"
+rm -rf "$FX"
+```
+
+#### 判定
+
+```
+T8-V verify.sh 自检报告（关联 ㉟ / ㊱）
+
+[通过/失败] 无 callout 产物不触发 integer expression expected
+[通过/失败] 无 callout 产物有明确 ℹ️ 提示
+[通过/失败] 有效 PNG 判为有效图片（魔数判定可用）
+[通过/失败] HTML 伪装的 .png 判为非图片文件
+```
+
 ---
 
 ## T9：全流程衔接
@@ -1013,26 +1070,39 @@ T15 MOC 生命周期验证报告
      check "$f tools" "head -15 '$f' | grep -q '^tools:'"
    done
    ```
-4. 确认占位符零残留、引用绝对 references 目录、参考路径可解析（F0-4 检测：绝对路径指向 skill 安装目录 `references/`，随仓库分发）：
+4. 确认占位符零残留、引用绝对 references 目录、参考路径形式合法（F0-4 检测）：
    ```bash
    # 占位符零残留
    for f in .claude/agents/concept-mapper.md .claude/agents/course-generator.md .claude/agents/note-writer.md; do
      check "$f 占位符零残留" "! grep -q '__SKILL_REF_DIR__' '$f'"
    done
-   # 引用绝对 references 目录（防止 v3.0 相对路径残留）
+   # 正向断言：烘焙路径必须等于本机归一化后的 references 目录（三端都是真断言）
+   WANT=$(pwd); command -v cygpath >/dev/null 2>&1 && WANT=$(cygpath -m "$WANT")
    for f in .claude/agents/concept-mapper.md .claude/agents/course-generator.md .claude/agents/note-writer.md; do
-     check "$f 引用绝对 references 目录" "grep -q \"\$PWD/references/\" '$f'"
+     check "$f 引用绝对 references 目录" "grep -qF '$WANT/references/' '$f'"
    done
-   # 每个 /.../references/*.md 绝对路径均指向真实文件
+   # 形式断言：先提取路径再判定。不要对整行 grep——行首是 Read/-，^/... 类断言会恒真
    for f in .claude/agents/concept-mapper.md .claude/agents/course-generator.md .claude/agents/note-writer.md; do
-     check "$f 参考路径可解析" "grep -oE '/[^ ()]*references/[a-z-]+\.md' '$f' | while read -r p; do test -f \"\$p\" || exit 1; done"
+     bad=$(grep -oE '([A-Za-z]:)?/[^ ()`]*references/[a-z-]+\.md' "$f" | sort -u | while read -r p; do
+       case "$p" in
+         [A-Za-z]:/*) : ;;          # 混合形式（Windows）OK
+         /[A-Za-z]/*) echo "$p" ;;  # MSYS 盘符形式 /d/... —— Read 工具不可解析
+         /*) : ;;                   # POSIX 绝对路径 OK
+         *) echo "$p" ;;            # 非绝对路径
+       esac
+     done)
+     check "$f 路径形式合法（绝对路径且非 MSYS /d/... 形式）" "test -z '$bad'"
    done
+   # 静态断言：不得出现 BSD 专有的原地替换写法（断言文本不含字面量，避免自匹配）
+   check "scripts/ 与 test/ 无 BSD 原地替换写法" "! grep -rqE 'sed[[:space:]]+-i' scripts/ test/"
    ```
-5. 确认幂等性：重复执行 `bash scripts/init-agents.sh .` 不报错、不覆盖已有文件
-6. 确认 `init-agents.sh` 不修改 `.claude/agents/` 中已有的其他文件（如有）
-7. **测试后恢复 `SKILL.md` agent 更新标志为 0**（脚本成功运行会把标志翻为 1，防止测试污染仓库状态）：
+5. **用 Read 工具实读一次**（㉝ 的唯一可靠判据）：取任一 agent 文件中烘焙的第一个 `references/*.md` 路径，原样交给 Read 工具读取，必须返回文件内容。`test -f` 在 Git Bash 里对 `/d/...` 会通过，但 Read 工具不通过——只有这一步能复现"bash 说文件在、agent 说文件不在"的原始症状。
+6. 确认幂等性：重复执行 `bash scripts/init-agents.sh .` 不报错、不覆盖已有文件
+7. 确认 `init-agents.sh` 不修改 `.claude/agents/` 中已有的其他文件（如有）
+8. **测试后恢复 `SKILL.md` agent 更新标志为 0**（脚本成功运行会把标志翻为 1，防止测试污染仓库状态）：
    ```bash
-   sed -i '' 's/agent更新标志：1/agent更新标志：0/' SKILL.md
+   # 用 bash 参数展开，不用 BSD 的原地替换写法（在 GNU 工具链上会崩）
+   body=$(<SKILL.md); printf '%s\n' "${body/agent更新标志：1/agent更新标志：0}" > SKILL.md
    check "SKILL.md flag 恢复为 0" "grep -q 'agent更新标志：0' SKILL.md"
    ```
 
@@ -1044,6 +1114,9 @@ T16-A init-agents 安装报告
 [通过/失败] 三个 subagent 文件安装完成（concept-mapper / course-generator / note-writer）
 [通过/失败] frontmatter 字段完整（name / description / model / tools）
 [通过/失败] 占位符零残留 + references/* 参考路径均可解析（F0-4 检测）
+[通过/失败] 烘焙路径形式合法（绝对路径，且非 MSYS /d/... 形式）
+[通过/失败] Read 工具实读烘焙路径成功（㉝ 判据）
+[通过/失败] scripts/ 与 test/ 无 BSD 原地替换写法（F0-5 检测）
 [通过/失败] 幂等性：重复安装不报错、不覆盖
 [通过/失败] 不修改无关文件
 [通过/失败] 测试后 SKILL.md agent 更新标志恢复为 0

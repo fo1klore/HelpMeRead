@@ -68,6 +68,19 @@ The skill and subagents live under the **project directory** where you run Claud
 - For production, always deploy via the SKILL.md gate command (the skill's own script). **Never deploy with the dev-repo script directly** — it would bake the dev repo's absolute path into the agents
 - **Re-run the gate after migrating your vault**: moving the project directory invalidates the baked absolute paths
 
+## Platform Support & Dependencies
+
+| Platform | Status | Notes |
+|---|---|---|
+| macOS | ✅ Full | Primary development environment (BSD toolchain) |
+| Linux / WSL | ✅ Full | GNU toolchain |
+| Windows + Git Bash | ✅ Full (since v3.2.3) | Scripts normalize `/d/...` to the `D:/...` mixed form, readable by both bash and the Read tool |
+| Windows native PowerShell / cmd | ❌ Not supported | Scripts require bash |
+
+Scripts are always LF (`.gitattributes` declares `* text=auto eol=lf`). If scripts fail on Windows with `$'\r': command not found`, your working copy is CRLF — run `git checkout -- .`, or `git rm -r --cached . && git reset --hard` if git reports a clean tree. Check with `git ls-files --eol scripts/*.sh` (any `w/crlf` means you are affected).
+
+Dependencies: `bash` ≥ 4, `curl`, and `python3` or `python` are required. `pdfimages` (poppler) and PyMuPDF are optional image-extraction backends. Ghostscript and Pandoc are no longer needed. Check with `bash scripts/check-deps.sh` (prints one `KEY=VALUE` per line).
+
 ## License
 
 [MIT](LICENSE)

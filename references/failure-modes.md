@@ -24,6 +24,9 @@
 |------|---------|---------|
 | 配置检查反复弹出 | 步骤 0 | 配置文件格式 |
 | 测试产物写入生产 vault | 步骤 0 | F0-2 测试模式 |
+| subagent 说参考文件/配置不存在，但 bash 里 `ls` 明明有 | 步骤 0 | F0-4 路径语法（MSYS `/d/...`） |
+| 脚本在 Linux / WSL / Windows 上直接崩（macOS 正常） | 步骤 0 | F0-5 语法跨平台分歧 |
+| 依赖检测结论与实际安装情况不符 | 步骤 1 | F0-6 依赖探测误报 |
 | PDF 图片缺失 / 全是文字截图 | 步骤 1 | 图片提取管线 |
 | 抓取内容只到摘要 | 步骤 1 | URL 转换、网络 |
 | 根目录散落 HTML 临时文件 | 步骤 1 | F1-5 清理 |
@@ -65,7 +68,9 @@
 # 生产配置路径由 preflight.sh 输出驱动（绝对路径，不依赖 CWD）
 CONFIG_PATH=$(bash scripts/preflight.sh 2>/dev/null | grep '^CONFIG_PATH=' | cut -d= -f2)
 cat "$CONFIG_PATH" 2>/dev/null
-jq -r '.obsidian_vault' "$CONFIG_PATH" 2>/dev/null | xargs ls -d
+PY=$(command -v python3 || command -v python)
+VAULT=$("$PY" -c 'import json,sys;print(json.load(open(sys.argv[1]))["obsidian_vault"])' "$CONFIG_PATH" 2>/dev/null)
+ls -d "$VAULT" 2>/dev/null
 ```
 
 ---
@@ -87,17 +92,83 @@ jq -r '.obsidian_vault' "$CONFIG_PATH" 2>/dev/null | xargs ls -d
 
 **检测命令**：
 ```bash
-# 逐一解析已部署 agent 中所有 /.../references/*.md 绝对路径，MISS 即异常
+# 先提取烘焙路径，再按形式判定。
+# 不要对整行 grep：行首是 `Read` / `-`，`^/...` 之类的断言会恒真，抓不到 /d/...
 for f in .claude/agents/concept-mapper.md .claude/agents/course-generator.md .claude/agents/note-writer.md; do
-  grep -oE '/[^ ()]*references/[a-z-]+\.md' "$f" | while read -r p; do
-    if [ -f "$p" ]; then echo "OK   $p"; else echo "MISS $p"; fi
+  grep -oE '([A-Za-z]:)?/[^ ()`]*references/[a-z-]+\.md' "$f" | sort -u | while read -r p; do
+    case "$p" in
+      [A-Za-z]:/*) echo "OK   $p（混合形式）" ;;
+      /[A-Za-z]/*) echo "BAD  $p（MSYS 盘符形式，Read 工具不可解析）" ;;
+      /*)          echo "OK   $p（POSIX 绝对路径）" ;;
+      *)           echo "BAD  $p（非绝对路径）" ;;
+    esac
   done
 done
+# 注意：`test -f "$p"` 不能当判据——Git Bash 里 bash 认 /d/...，但 Read 工具不认，
+# 唯一可靠的验证是在 agent 中用 Read 工具实际读取一次。
 # v3.0 相对路径残留（无前导 / 的 references/...）不命中上面的绝对路径正则，
 # 另查：grep -n 'references/[a-z-]*\.md' .claude/agents/*.md 并确认每个都以绝对路径开头
 # 兜底：查找历史版本在产物目录下残留的空 references 目录
 find <项目目录> -type d -path '*/.claude/skills/help-me-read/references' -empty 2>/dev/null
 ```
+
+---
+
+### F0-5：脚本语法跨平台分歧（BSD/GNU）
+
+**现象**：脚本在 macOS 上一切正常，换到 Linux / WSL / Windows Git Bash 就崩；或反过来，在 Linux 上正常、macOS 上的检查恒通过。典型报错：`sed: can't read s|...|g: No such file or directory`、`$'\r': command not found`、`stat: illegal option -- c`。
+
+**原因**（按概率排序）：
+1. `sed -i ''`（BSD 写法）在 GNU sed 上把空串当 script、把表达式当文件名 → 脚本 `set -e` 直接退出
+2. Windows 默认 `core.autocrlf=true` 检出 CRLF → bash 在 `set -e\r` 处语法错误
+3. `stat -c`（GNU 写法）在 BSD/macOS 上非法，stdout 为空 → 依赖它的比对恒通过
+4. `date -r`、`readlink -f`、`grep -P` 等同类分歧
+
+**修复**：
+1. 全仓禁止 `sed -i`，改用 `replace_in_file`（bash 参数展开，见 `scripts/init-agents.sh`）
+2. 仓库根 `.gitattributes` 声明 `* text=auto eol=lf`，脚本一律 LF
+3. 指纹/校验类命令用 POSIX 工具（`cksum`），不要用 `stat -c`
+4. 注意 bash ≥ 5.2 的 `patsub_replacement`：替换串里的 `&` 会被展开，需 `shopt -u patsub_replacement`
+
+**检测命令**：
+```bash
+# 1. 不得出现 BSD/GNU 分歧写法
+grep -rnE 'sed[[:space:]]+-i' scripts/ test/ && echo "BAD: 存在 sed -i"
+# 2. 受控脚本必须全部是 LF
+git ls-files --eol scripts/*.sh | grep -q 'w/crlf' && echo "BAD: 存在 CRLF 工作副本"
+# 3. 不得使用 GNU 专有的 stat -c
+grep -rnE 'stat[[:space:]]+-c' scripts/ test/ && echo "BAD: 存在 stat -c"
+```
+
+> 关联 issue：㉜、㉞、㊲
+
+---
+
+### F0-6：依赖探测误报
+
+**现象**：`check-deps.sh` 报告某工具不可用，但用户明明装了；或输出格式错乱（裸 `YES` 单独成行，不挂在任何 KEY 上）；或 `verify.sh` 把所有有效图片判为"非图片文件"。
+
+**原因**（按概率排序）：
+1. 解释器名硬编码为 `python3`，Windows 上通常只有 `python` / `py`
+2. `file` 命令不在 Git for Windows 默认工具集，缺失后 `dims` 为空 → 图片判定全错
+3. `which X && echo YES` 把路径和判定值同时塞进变量 → 输出跨行
+4. `jq` 在 Git Bash 与 macOS 上默认都没有
+
+**修复**：
+1. 用 `command -v` 替代 `which`，判定值只输出 `YES` / `NO`
+2. 解释器多候选：`command -v python3 || command -v python`
+3. 图片类型改用魔数判定（`od` 读头部 4 字节），不依赖 `file`
+4. 排障命令不要依赖 `jq`，改用 python 的一行 JSON 解析
+
+**检测命令**：
+```bash
+# 输出契约：除 KEY=VALUE 外不应有其他行
+bash scripts/check-deps.sh | grep -vE '^(NETWORK|PDFIMAGES|PYMUPDF|PYTHON)=' && echo "BAD: 输出格式异常"
+# 解释器探测
+command -v python3 || command -v python || echo "无 python"
+```
+
+> 关联 issue：㉟
 
 ---
 

@@ -16,6 +16,25 @@ check() {
     ERRORS=$((ERRORS + 1))
   fi
 }
+
+# python 解释器：Windows 上通常只有 python / py，没有 python3
+PY=""
+if command -v python3 >/dev/null 2>&1; then
+  PY="$(command -v python3)"
+elif command -v python >/dev/null 2>&1; then
+  PY="$(command -v python)"
+fi
+
+# 图片魔数判定（PNG / JPEG / GIF）。不用 file 命令——Git for Windows 默认不带，
+# 缺失时旧实现 dims 为空，会把所有有效图片误判成"非图片文件"。
+is_image() {
+  local magic
+  magic="$(head -c 4 -- "$1" 2>/dev/null | od -An -tx1 | tr -d ' \n')"
+  case "$magic" in
+    89504e47*|ffd8ff*|47494638*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 echo "========================================="
 echo " Help Me Read —— 产物验证"
 echo " 目标目录: $TEST_DIR"
@@ -38,13 +57,15 @@ echo "--- Callout 格式检查 ---"
 for md_file in "$TEST_DIR"/papers/*/HMR-*.md "$TEST_DIR"/concepts/*.md "$TEST_DIR"/papers/*/course/*.md; do
   [ -f "$md_file" ] || continue
   fname="$(basename "$md_file")"
-  opens=$(grep -c '^>[[:space:]]*\[!' "$md_file" 2>/dev/null || echo 0)
-  total_block=$(grep -c '^>' "$md_file" 2>/dev/null || echo 0)
+  opens=$(grep -c '^>[[:space:]]*\[!' "$md_file" 2>/dev/null); opens=${opens:-0}
+  total_block=$(grep -c '^>' "$md_file" 2>/dev/null); total_block=${total_block:-0}
   if [ "$opens" -gt 0 ] && [ "$total_block" -gt 0 ]; then
     green "  ✅ $fname: $opens 个 callout"
   elif [ "$opens" -gt 0 ]; then
     red "  ❌ $fname: 有 callout 标记但无内容"
     ERRORS=$((ERRORS + 1))
+  else
+    echo "  ℹ️ $fname 无 callout 标注（此项非强制）"
   fi
 done
 echo ""
@@ -52,8 +73,7 @@ echo "--- 图片检查 ---"
 for img in "$TEST_DIR"/papers/*/course/assets/*.png "$TEST_DIR"/papers/*/course/assets/*.jpg "$TEST_DIR"/papers/*/course/assets/*.jpeg; do
   [ -f "$img" ] || continue
   iname="$(basename "$img")"
-  dims=$(file --mime-type "$img" 2>/dev/null)
-  if echo "$dims" | grep -q 'image/'; then
+  if is_image "$img"; then
     green "  ✅ $iname (有效图片)"
   else
     red "  ❌ $iname (非图片文件)"
@@ -219,7 +239,9 @@ MOC_FILE="$TEST_DIR/HelpMeRead MOC.md"
 check "MOC 文件存在" "test -f '$MOC_FILE'"
 check "MOC frontmatter 含 type:moc" "head -5 '$MOC_FILE' 2>/dev/null | grep -q 'type: moc'"
 if [ -f "$MOC_FILE" ]; then
-  python3 -c "
+  if [ -z "$PY" ]; then
+    echo "  ⚠️ 未找到 python，MOC 一致性检查跳过（不计入失败）"
+  elif "$PY" -c "
 import os, re, sys
 moc = open('$MOC_FILE').read()
 moc_refs = set(re.findall(r'\\[\\[(HMR-[^\\]|]+)', moc))
@@ -236,7 +258,11 @@ if missing:
     sys.exit(1)
 if extra:
     print(f'MOC 有多余引用 (可能是用户自定义行): {extra}')
-" && green "  ✅ MOC 论文引用与 papers/ 目录一致" || red "  ❌ MOC 论文引用与 papers/ 目录不一致"
+" ; then
+    green "  ✅ MOC 论文引用与 papers/ 目录一致"
+  else
+    red "  ❌ MOC 论文引用与 papers/ 目录不一致"
+  fi
 fi
 echo ""
 echo "--- Subagent 检查 ---"

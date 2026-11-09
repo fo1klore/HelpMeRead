@@ -1,2 +1,18 @@
+# 统一换行：仓库内容一律 LF，避免 Windows 默认 core.autocrlf=true 把脚本检出为 CRLF
+# （CRLF 会让 bash 在第 11 行 `set -e\r` 处直接崩，见 ISSUES ㉞）
+* text=auto eol=lf
+
+# 二进制类型显式声明（自文档化；text=auto 本身也能探测到）
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.docx binary
+
+# 若将来加入 Windows 专用脚本，必须显式声明 eol=crlf
+# *.bat text eol=crlf
+# *.ps1 text eol=crlf
+
 # 测试目录不包含在 GitHub ZIP/Release 归档中
 test/ export-ignore

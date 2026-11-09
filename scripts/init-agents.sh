@@ -10,6 +10,32 @@
 
 set -e
 
+# ── norm_path( path ) ──
+# MSYS/Git Bash 的 pwd 输出 /d/... 形式，bash 认，但 Read 工具（Node/Win32 语义）
+# 会把它解析成当前盘符根目录下的 d\...，导致 subagent 读不到参考文件。
+# cygpath -m 输出 D:/foo 混合形式，bash 与 Read 双向可读；非 Windows 环境为恒等函数。
+norm_path() {
+    if command -v cygpath >/dev/null 2>&1; then
+        cygpath -m "$1"
+    else
+        printf '%s\n' "$1"
+    fi
+}
+
+# ── replace_in_file( file, from, to ) ──
+# 就地替换字面量。不经 sed，因此没有 BSD/GNU 的 -i 语法差异。
+# $(<file) 会吃掉末尾换行，printf 补回一个——被替换的文件均以单个换行结尾。
+# bash>=5.2 的 patsub_replacement 默认开启，会把替换串里的 & 展开为匹配文本，
+# 路径含 & 时静默写坏，故先关闭（bash 3.2/5.1 上该 shopt 不存在，忽略错误即可）。
+replace_in_file() {
+    local f="$1" from="$2" to="$3" body new
+    shopt -u patsub_replacement 2>/dev/null || true
+    body=$(<"$f")
+    new=${body//"$from"/"$to"}
+    [ "$new" = "$body" ] && return 0
+    printf '%s\n' "$new" > "$f"
+}
+
 if [ $# -lt 1 ]; then
     echo "用法: bash scripts/init-agents.sh <目标目录>"
     echo "示例: bash scripts/init-agents.sh /path/to/vault"
@@ -18,14 +44,31 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
+# <目标目录> 归一化：接受 D:\vault / D:/vault / /d/vault / ~ 开头 / 相对路径
 TARGET_DIR="$1"
+case "$TARGET_DIR" in
+    "~")    TARGET_DIR="$HOME" ;;
+    "~/"*)  TARGET_DIR="$HOME/${TARGET_DIR:2}" ;;
+esac
+if command -v cygpath >/dev/null 2>&1; then
+    TARGET_DIR="$(cygpath -u "$TARGET_DIR")"
+fi
+case "$TARGET_DIR" in
+    /*) ;;
+    *)  TARGET_DIR="$PWD/$TARGET_DIR" ;;
+esac
+mkdir -p "$TARGET_DIR"
+TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"     # 折叠 ./ 与 ..，得到规范绝对路径（子 shell，不改主 CWD）
+TARGET_DIR="$(norm_path "$TARGET_DIR")"
+
 AGENTS_DIR="$TARGET_DIR/.claude/agents"
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PROJECT_ROOT="$(norm_path "$PROJECT_ROOT")"
 # 参考文件随 skill 安装分发于 $PROJECT_ROOT/references，subagent 直接读取其绝对路径，
 # 不在目标目录下复制或新建 skill 结构
 SKILL_REF_DIR="$PROJECT_ROOT/references"
 mkdir -p "$AGENTS_DIR"
-# 守卫：PROJECT_ROOT 解析异常时显式失败，避免 sed 把 __SKILL_REF_DIR__ 替换为空路径
+# 守卫：PROJECT_ROOT 解析异常时显式失败，避免占位符被替换为空路径
 [ -d "$SKILL_REF_DIR" ] || { echo "错误: references 目录不存在: $SKILL_REF_DIR"; exit 1; }
 
 # ── write_agent( file, name, tmpfile ) ──
@@ -105,7 +148,7 @@ tools:
 
 **不要写入磁盘**。全部产出为最终输出的 JSON。
 AGENT_EOF
-sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$tmp"
+replace_in_file "$tmp" '__SKILL_REF_DIR__' "$SKILL_REF_DIR"
 write_agent "$AGENTS_DIR/concept-mapper.md" "concept-mapper" "$tmp"
 
 # ────────── course-generator ──────────
@@ -161,7 +204,7 @@ tools:
 ### D. 质量检查（必做）
 按 `__SKILL_REF_DIR__/quality-checks.md` 的 12 项逐条执行。任意失败→修正重试，上限 2 次。最终报告成功/失败详情。
 AGENT_EOF
-sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$tmp"
+replace_in_file "$tmp" '__SKILL_REF_DIR__' "$SKILL_REF_DIR"
 write_agent "$AGENTS_DIR/course-generator.md" "course-generator" "$tmp"
 
 # ────────── note-writer ──────────
@@ -209,13 +252,13 @@ tools:
 - 不存在 → 创建（frontmatter: type:moc, tags:[moc]），含「按状态」表
 - 已存在 → 在「按状态」表追加当前论文行
 AGENT_EOF
-sed -i '' "s|__SKILL_REF_DIR__|${SKILL_REF_DIR}|g" "$tmp"
+replace_in_file "$tmp" '__SKILL_REF_DIR__' "$SKILL_REF_DIR"
 write_agent "$AGENTS_DIR/note-writer.md" "note-writer" "$tmp"
 
 # ── 更新 SKILL.md agent 更新标志 ──
 SKILL_FILE="$PROJECT_ROOT/SKILL.md"
 if grep -q 'agent更新标志：0' "$SKILL_FILE" 2>/dev/null; then
-    sed -i '' 's/agent更新标志：0/agent更新标志：1/' "$SKILL_FILE"
+    replace_in_file "$SKILL_FILE" 'agent更新标志：0' 'agent更新标志：1'
     echo ""
     echo "🔖 SKILL.md agent 更新标志 → 1"
 fi

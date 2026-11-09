@@ -181,11 +181,13 @@ SKILL.md 步骤 0 管理。字段：
 
 ```json
 {
-  "obsidian_vault": "D:\\Path\\To\\Vault",
+  "obsidian_vault": "D:/Path/To/Vault",
   "qa_record": false,
   "external_concepts_dirs": []
 }
 ```
+
+> 路径写法：一律用正斜杠。`D:\Path\To\Vault` 这种原生反斜杠形式在 JSON 里需要转义，且 agent 拼成 `<vault>/HelpMeRead/...` 后交给 Read/Write 工具时容易出问题；`/d/...` 这种 MSYS 形式同理（bash 认、Read 工具不认）。混合形式 `D:/Path/To/Vault` 是两端都能读的唯一写法。
 
 | 字段 | 默认 | 说明 |
 |---|---|---|

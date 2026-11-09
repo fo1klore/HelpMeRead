@@ -50,9 +50,11 @@ triggers: "帮我读、总结这篇、读一下、吃透、做成课程、记到
 
 ## 步骤 0：首次运行引导
 
-静默执行 `bash scripts/preflight.sh` 检测模式（test/production），读取配置。
+静默执行 `bash scripts/preflight.sh` 检测模式（test/production），读取配置。脚本输出三行：`PROJECT_ROOT` / `MODE` / `CONFIG_PATH`。
 
 **配置路径规范**：所有配置文件路径必须基于 `preflight.sh` 输出的 `CONFIG_PATH`（绝对路径），禁止使用裸相对路径 `.claude/skills/help-me-read/help-me-read.json` 进行存在性检查。
+
+**路径形式规范**：脚本输出的路径已是混合形式（macOS/Linux 为 `/Users/...`，Windows 为 `D:/...`）。禁止自行用 `pwd`、`$PWD` 或反斜杠拼接路径——MSYS 的 `/d/...` 形式 bash 认但 Read 工具不认，会表现为"bash 说文件在、agent 说文件不在"。若配置里的 `obsidian_vault` 为 `/d/...` 或 `D:\...` 形式，先转成 `D:/...` 再使用。测试模式下 `test-config.json` 中的 `<PROJECT_ROOT>` 占位符，用 preflight 输出的 `PROJECT_ROOT` 值替换。
 
 配置不存在（首次）→ 仅问两件事：
 1. **Obsidian vault 路径**（产物存到 `HelpMeRead/` 子目录）
